@@ -3,8 +3,6 @@
 #include <vector>
 #include <limits>
 
-#define _CRT_SECURE_NO_WARNINGS
-
 #include "ExeManager.h"
 
 // https://github.com/brofield/simpleopt

@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D84AEEAE-D3C6-474A-9B21-5C1B72A4AB8A}</ProjectGuid>
-    <RootNamespace>PortableExecutablePatcher</RootNamespace>
+    <RootNamespace>ExeManager</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -121,11 +121,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="source\main.cpp" />
-    <ClCompile Include="source\PortableExecutableEditor.cpp" />
+    <ClCompile Include="source\ExeManager.cpp" />
+    <ClCompile Include="source\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\PortableExecutableEditor.h" />
+    <ClInclude Include="source\ExeManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
