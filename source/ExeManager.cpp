@@ -1,14 +1,14 @@
-#include "PortableExecutableEditor.h"
+#include "ExeManager.h"
 #include <stdexcept>
 #include <exception>
 
 #define OEP_SIG 0xC1C2C3C4
 
-const DWORD PortableExecutableEditor::characteristics = 
+const DWORD ExeManager::characteristics = 
 	IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
     IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 
-DWORD PortableExecutableEditor::Align(DWORD num, DWORD multiple) {
+DWORD ExeManager::Align(DWORD num, DWORD multiple) {
     return ((num + multiple - 1) / multiple) * multiple;
 }
 
@@ -23,8 +23,8 @@ __declspec(noinline) static int NewMain() {
 	__asm {
 		call L1
 		L1 : pop address
-				mov eax, dword ptr fs : [0x30]
-				mov module, eax
+		mov eax, dword ptr fs : [0x30]
+		mov module, eax
 	}
 
 	module = (LDR_MODULE *)((PEB *)module)->LoaderData->InLoadOrderModuleList.Flink;
@@ -54,7 +54,7 @@ __declspec(noinline) static void NewMainEnd() {
     return;
 }
 
-PortableExecutableEditor::PortableExecutableEditor(wchar_t *target_filepath) {
+ExeManager::ExeManager(wchar_t *target_filepath) {
 	executable_handle = CreateFile(target_filepath,
 		GENERIC_WRITE | GENERIC_READ,
 		FILE_SHARE_WRITE | FILE_SHARE_READ,
@@ -86,7 +86,7 @@ PortableExecutableEditor::PortableExecutableEditor(wchar_t *target_filepath) {
     }
 }
 
-int PortableExecutableEditor::ModifyFile(char *new_section_name) {
+int ExeManager::ModifyFile(char *new_section_name) {
     memset(&new_section, 0, sizeof(IMAGE_SECTION_HEADER));
 
     PIMAGE_SECTION_HEADER last_section = section_headers[file_header->NumberOfSections - 1];
@@ -125,7 +125,7 @@ int PortableExecutableEditor::ModifyFile(char *new_section_name) {
     return 0;
 }
 
-int PortableExecutableEditor::SaveFile() {
+int ExeManager::SaveFile() {
     DWORD bytes_written = 0;
     SetFilePointer(executable_handle, 0, NULL, FILE_BEGIN);
     WriteFile(executable_handle, file_buffer, file_size, &bytes_written, NULL);

@@ -10,7 +10,7 @@
 // Tomasz Nowak, 2000-2015.
 #include "ntundoc.h"
 
-class PortableExecutableEditor {
+class ExeManager {
 private:
     HANDLE executable_handle;
 
@@ -33,7 +33,7 @@ private:
 
     static DWORD Align(DWORD number, DWORD multiple);
 public:
-    PortableExecutableEditor(wchar_t *target_filepath);
+    ExeManager(wchar_t *target_filepath);
     int ModifyFile(char *pszSectionName);
     int SaveFile();
 };

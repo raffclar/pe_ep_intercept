@@ -5,7 +5,7 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "PortableExecutableEditor.h"
+#include "ExeManager.h"
 
 // https://github.com/brofield/simpleopt
 // MIT license
@@ -83,23 +83,23 @@ int _tmain(int argc, wchar_t *argv[]) {
 		file_name, _MAX_FNAME, 
 		extension, _MAX_EXT);
 
-	PortableExecutableEditor *editor;
+	ExeManager *exe_manager;
 
 	try {
-		editor = &PortableExecutableEditor(target_filepath);
+		exe_manager = &ExeManager(target_filepath);
 		_tprintf(L"* Loaded executable file %s%s into buffer.\n", file_name, extension);
 	} catch (std::runtime_error) {
 		_tprintf(L"! Error, could not open the executable file: %s%s\n", file_name, extension);
 		return 1;
 	}
 
-    if (editor->ModifyFile(target_section_name)) {
+    if (exe_manager->ModifyFile(target_section_name)) {
         return 1;
     } else {
 		_tprintf(L"* Modified buffer for executable file %s%s.\n", file_name, extension);
     }
 
-    if (editor->SaveFile()) {
+    if (exe_manager->SaveFile()) {
         return 1;
     } else {
 		_tprintf(L"* The changes to the executable file have been saved.\n");
