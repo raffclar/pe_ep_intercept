@@ -94,7 +94,7 @@ int _tmain(int argc, wchar_t *argv[]) {
 		_tprintf(L"* Loaded executable file %s%s into buffer.\n", file_path.file_name, file_path.extension);
 	}
 	catch (std::runtime_error) {
-		_tprintf(L"! Error, could not open the executable file: %s%s\n", file_path.file_name, file_path.extension);
+		_tprintf(L"* Error, could not open the executable file: %s%s\n", file_path.file_name, file_path.extension);
 		return 1;
 	}
 

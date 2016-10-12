@@ -4,9 +4,15 @@
 
 #define OEP_SIG 0xC1C2C3C4
 
+extern "C" {
+	DWORD GetPEB();
+	DWORD GetCurrentAddress();
+	void JumpToAddress(DWORD address);
+}
+
 const DWORD ExeManager::characteristics = 
 	IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
-    IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
+	IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 
 DWORD ExeManager::Align(DWORD num, DWORD multiple) {
     return ((num + multiple - 1) / multiple) * multiple;
@@ -15,17 +21,11 @@ DWORD ExeManager::Align(DWORD num, DWORD multiple) {
 // Declaring as static will compile function in sequence to the next static function
 // Note: this is not at all safe or expected
 __declspec(noinline) static int NewMain() {
-	unsigned long address;
+	unsigned long address = GetCurrentAddress();
 	unsigned long base_address;
-	LDR_MODULE *module;
 
-	// Get current address and pointer to Process Environment Block (PEB)
-	__asm {
-		call L1
-		L1 : pop address
-		mov eax, dword ptr fs : [0x30]
-		mov module, eax
-	}
+	// Get pointer to Process Environment Block (PEB)
+	LDR_MODULE *module = (LDR_MODULE*)GetPEB();
 
 	module = (LDR_MODULE *)((PEB *)module)->LoaderData->InLoadOrderModuleList.Flink;
 	while (module->BaseAddress) {
