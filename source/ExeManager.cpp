@@ -4,6 +4,7 @@
 
 #define OEP_SIG 0xC1C2C3C4
 
+// These are assembly procedures
 extern "C" {
 	void Entry();
 	void EntryPtr();
@@ -16,50 +17,6 @@ const DWORD ExeManager::characteristics =
 DWORD ExeManager::Align(DWORD num, DWORD multiple) {
     return ((num + multiple - 1) / multiple) * multiple;
 }
-
-/*
-// Declaring as static will compile function in sequence to the next static function
-// Note: this is not at all safe or expected
-__declspec(noinline) static int NewMain() {
-	unsigned long address;
-	unsigned long base_address;
-	LDR_MODULE *module;
-
-	// Get current address and pointer to Process Environment Block (PEB)
-	__asm {
-		call L1
-		L1 : pop address
-			 mov eax, dword ptr fs : [0x30]
-			 mov module, eax
-	}
-
-	module = (LDR_MODULE *)((PEB *)module)->LoaderData->InLoadOrderModuleList.Flink;
-	while (module->BaseAddress) {
-		unsigned long base = (unsigned long)module->BaseAddress;
-		unsigned long difference = address - base;
-
-		if (base + difference == address) {
-			base_address = base;
-			break;
-		}
-
-		module = (LDR_MODULE *)module->InLoadOrderModuleList.Flink;
-	}
-
-	// Jump to the original entry point
-	__asm {
-		mov edx, base_address
-		mov eax, OEP_SIG // Original entry point will be stored here
-		or edx, eax
-		jmp edx
-	}
-}
-
-// Empty function that exists purely to act as a pointer to memory
-__declspec(noinline) static void NewMainEnd() {
-    return;
-}
-*/
 
 ExeManager::ExeManager(wchar_t *target_filepath) {
 	executable_handle = CreateFile(target_filepath,
@@ -104,9 +61,16 @@ int ExeManager::ModifyFile(char *new_section_name) {
 
     new_section.Characteristics = characteristics;
     new_section.SizeOfRawData = dwSectionSizeAligned;
-    new_section.Misc.VirtualSize = Align(dwSectionSizeAligned, optional_header->SectionAlignment);
-    new_section.PointerToRawData = Align(last_section->SizeOfRawData + last_section->PointerToRawData, optional_header->FileAlignment);
-    new_section.VirtualAddress = Align(last_section->Misc.VirtualSize + last_section->VirtualAddress, optional_header->SectionAlignment);
+
+    new_section.Misc.VirtualSize = Align(dwSectionSizeAligned, 
+		optional_header->SectionAlignment);
+
+    new_section.PointerToRawData = Align(last_section->SizeOfRawData + last_section->PointerToRawData, 
+		optional_header->FileAlignment);
+
+    new_section.VirtualAddress = Align(last_section->Misc.VirtualSize + last_section->VirtualAddress, 
+		optional_header->SectionAlignment);
+
     memcpy(new_section.Name, new_section_name, IMAGE_SIZEOF_SHORT_NAME / 2);
 
     // Copy new section to an offset directly after the last section
