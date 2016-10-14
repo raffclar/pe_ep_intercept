@@ -5,9 +5,8 @@
 #define OEP_SIG 0xC1C2C3C4
 
 extern "C" {
-	DWORD GetPEB();
-	DWORD GetCurrentAddress();
-	void JumpToAddress(DWORD address);
+	void Entry();
+	void EntryPtr();
 }
 
 const DWORD ExeManager::characteristics = 
@@ -18,14 +17,21 @@ DWORD ExeManager::Align(DWORD num, DWORD multiple) {
     return ((num + multiple - 1) / multiple) * multiple;
 }
 
+/*
 // Declaring as static will compile function in sequence to the next static function
 // Note: this is not at all safe or expected
 __declspec(noinline) static int NewMain() {
-	unsigned long address = GetCurrentAddress();
+	unsigned long address;
 	unsigned long base_address;
+	LDR_MODULE *module;
 
-	// Get pointer to Process Environment Block (PEB)
-	LDR_MODULE *module = (LDR_MODULE*)GetPEB();
+	// Get current address and pointer to Process Environment Block (PEB)
+	__asm {
+		call L1
+		L1 : pop address
+			 mov eax, dword ptr fs : [0x30]
+			 mov module, eax
+	}
 
 	module = (LDR_MODULE *)((PEB *)module)->LoaderData->InLoadOrderModuleList.Flink;
 	while (module->BaseAddress) {
@@ -53,6 +59,7 @@ __declspec(noinline) static int NewMain() {
 __declspec(noinline) static void NewMainEnd() {
     return;
 }
+*/
 
 ExeManager::ExeManager(wchar_t *target_filepath) {
 	executable_handle = CreateFile(target_filepath,
@@ -111,12 +118,12 @@ int ExeManager::ModifyFile(char *new_section_name) {
     optional_header->AddressOfEntryPoint = new_section.VirtualAddress;
     optional_header->SizeOfImage = new_section.VirtualAddress + new_section.Misc.VirtualSize;
 
-    // Add new entry code. TODO: This is not good
-    size_t pointer_NewMain = (size_t)NewMain;
-    size_t pointer_NewMainEnd = (size_t)NewMainEnd;
-    function_buffer_size = pointer_NewMainEnd - pointer_NewMain;
+    // Add new entry code. TODO: This is not good. Works in release (not debug) mode only
+    size_t addr_entry = (size_t)Entry;
+    size_t addr_entry_ptr = (size_t)EntryPtr;
+    function_buffer_size = addr_entry_ptr - addr_entry;
     function_buffer = new char[function_buffer_size];
-    memcpy(function_buffer, reinterpret_cast<char*>(&NewMain), function_buffer_size);
+    memcpy(function_buffer, reinterpret_cast<char*>(&Entry), function_buffer_size);
 
     // Update the size of the executable file to accommodate the new section
     SetFilePointer(executable_handle, new_section.PointerToRawData + new_section.SizeOfRawData, NULL, FILE_BEGIN);

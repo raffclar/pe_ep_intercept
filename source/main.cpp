@@ -9,6 +9,8 @@
 // MIT license
 #include "utils/SimpleOpt.h"
 
+const char *default_section_name = ".end";
+
 struct FilePath {
 	wchar_t drive[_MAX_DRIVE];
 	wchar_t directory[_MAX_DIR];
@@ -45,7 +47,7 @@ int _tmain(int argc, wchar_t *argv[]) {
 	char target_section_name[name_size];
 	size_t name_bytes_copied = 0;
 
-	wchar_t *target_filepath;
+	wchar_t *target_filepath = NULL;
 	_ESOError eso_state = SO_SUCCESS;
 
 	while (args.Next() && eso_state == SO_SUCCESS) {
@@ -64,20 +66,27 @@ int _tmain(int argc, wchar_t *argv[]) {
 			}
 		}
 		else if (eso_state == SO_OPT_INVALID) {
-			_tprintf(L"Error, unknown argument was given: %s\n", args.OptionText());
+			_tprintf(L"* Error, unknown option was given: %s\n", args.OptionText());
 		}
 		else if (eso_state == SO_ARG_MISSING) {
-			_tprintf(L"Error, missing argument was given for: %s\n", args.OptionText());
+			_tprintf(L"* Error, missing argument was given for: %s\n", args.OptionText());
 		}
 	}
 
+	//TODO: Replace empty char array check with file path validator
+	// Quit if the above parsing fails otherwise we validate the path argument
 	if (eso_state != SO_SUCCESS) {
+		printUsage();
+		return 1;
+	} else if (target_filepath[0] == '\0') {
+		_tprintf(L"* Error, path cannot be empty.\n\n");
 		printUsage();
 		return 1;
 	}
 
 	if (name_bytes_copied == 0) {
-		memcpy(target_section_name, ".end", name_size);
+		_tprintf(L"* No section name specified. Using \"%hs\".\n", default_section_name);
+		memcpy(target_section_name, default_section_name, name_size);
 	}
 
 	FilePath file_path;
