@@ -8,6 +8,7 @@ option casemap :none
 .code
 
 ; Most of this procedure was code-generated from Visual C++
+; Needs stepping through to ensure that the module base address being fetched is correct
 Entry PROC
 	ASSUME FS:NOTHING
 	CALL CURRENTADDR
@@ -35,14 +36,14 @@ Entry PROC
 		MOV EAX,DWORD PTR SS:[EBP-30h]
 		MOV DWORD PTR SS:[EBP-18h],EAX
 		JMP SHORT ENDLOOP
-			COND: 
-				MOV EAX,DWORD PTR SS:[EBP-24h]
-				MOV ECX,DWORD PTR DS:[EAX]
-				MOV DWORD PTR SS:[EBP-24h],ECX
-				JMP SHORT SEARCHPEB
+		COND: 
+			MOV EAX,DWORD PTR SS:[EBP-24h]
+			MOV ECX,DWORD PTR DS:[EAX]
+			MOV DWORD PTR SS:[EBP-24h],ECX
+			JMP SHORT SEARCHPEB
 	ENDLOOP:
 		MOV EDX,DWORD PTR SS:[EBP-18h]
-		MOV EAX, 000001563h						; Hard coded OEP constant. Will need to replace
+		MOV EAX, 000001563h		; Hard coded OEP constant. Will need to replace
 		OR EDX,EAX
 		JMP EDX
 	ASSUME FS:ERROR
