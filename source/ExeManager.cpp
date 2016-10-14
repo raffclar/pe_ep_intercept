@@ -28,15 +28,16 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 		throw std::runtime_error("CreateFile(): Failed to open file.");
 	}
 
-    file_size = GetFileSize(executable_handle, NULL);
-    file_buffer = new char[file_size];
-
-    DWORD bytes_read = 0;
+	// Load contents of the file into an array
+	DWORD bytes_read = 0;
+	file_size = GetFileSize(executable_handle, NULL);
+	file_buffer = new char[file_size];
     ReadFile(executable_handle, file_buffer, file_size, &bytes_read, NULL);
 
+	// Portable Executable headers
     dos_header = (PIMAGE_DOS_HEADER)file_buffer;
     nt_header = (PIMAGE_NT_HEADERS)&file_buffer[dos_header->e_lfanew];
-    file_header = (PIMAGE_FILE_HEADER)&nt_header->FileHeader;
+    file_header	= (PIMAGE_FILE_HEADER)&nt_header->FileHeader;
     optional_header = (PIMAGE_OPTIONAL_HEADER)&nt_header->OptionalHeader;
 
     // We need to get the offset for where the NT (file and optional) headers

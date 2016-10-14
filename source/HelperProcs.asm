@@ -48,7 +48,8 @@ Entry PROC
 		JMP EDX
 	ASSUME FS:ERROR
 Entry ENDP
-	
+
+; Act as an indicator for where the Entry procedure will end
 EntryPtr PROC
 	RET
 EntryPtr ENDP
