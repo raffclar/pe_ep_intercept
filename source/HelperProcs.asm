@@ -50,8 +50,8 @@ Entry PROC
 Entry ENDP
 
 ; Act as an indicator for where the Entry procedure will end
-EntryPtr PROC
+EntryEnd PROC
 	RET
-EntryPtr ENDP
+EntryEnd ENDP
 
 END

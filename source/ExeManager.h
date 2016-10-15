@@ -10,6 +10,8 @@
 // Tomasz Nowak, 2000-2015.
 #include "ntundoc.h"
 
+typedef void(*funptr);
+
 class ExeManager {
 private:
     HANDLE executable_handle;
@@ -34,6 +36,7 @@ private:
     static DWORD Align(DWORD number, DWORD multiple);
 public:
     ExeManager(wchar_t *target_filepath);
+	int CopyProcedure(char *function_buffer, funptr ProcPtr, funptr ProcEndPtr);
     int ModifyFile(char *pszSectionName);
     int SaveFile();
 };

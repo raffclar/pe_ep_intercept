@@ -4,12 +4,6 @@
 
 #define OEP_SIG 0xC1C2C3C4
 
-// These are assembly procedures
-extern "C" {
-	void Entry();
-	void EntryPtr();
-}
-
 const DWORD ExeManager::characteristics = 
 	IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
 	IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
@@ -51,6 +45,22 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 	}
 }
 
+//TODO: This is not good. Works in release (not debug) mode only. Also unpredictable behavior
+int ExeManager::CopyProcedure(char * function_buffer, funptr ProcPtr, funptr ProcEndPtr) {
+	size_t addr_entry = (size_t)ProcPtr;
+	size_t addr_entry_end = (size_t)ProcEndPtr;
+
+	if (addr_entry > addr_entry_end) {
+		throw std::runtime_error("CopyProcedure(): Procedure pointer is greater than ending procedure pointer.");
+	}
+
+	function_buffer_size = addr_entry_end - addr_entry;
+	function_buffer = new char[function_buffer_size];
+	memcpy(function_buffer, reinterpret_cast<char*>(&ProcPtr), function_buffer_size);
+
+	return 0;
+}
+
 int ExeManager::ModifyFile(char *new_section_name) {
 	memset(&new_section, 0, sizeof(IMAGE_SECTION_HEADER));
 
@@ -82,13 +92,6 @@ int ExeManager::ModifyFile(char *new_section_name) {
 	file_header->NumberOfSections++;
 	optional_header->AddressOfEntryPoint = new_section.VirtualAddress;
 	optional_header->SizeOfImage = new_section.VirtualAddress + new_section.Misc.VirtualSize;
-
-	// Add new entry code. TODO: This is not good. Works in release (not debug) mode only
-	size_t addr_entry = (size_t)Entry;
-	size_t addr_entry_ptr = (size_t)EntryPtr;
-	function_buffer_size = addr_entry_ptr - addr_entry;
-	function_buffer = new char[function_buffer_size];
-	memcpy(function_buffer, reinterpret_cast<char*>(&Entry), function_buffer_size);
 
 	// Update the size of the executable file to accommodate the new section
 	SetFilePointer(executable_handle, new_section.PointerToRawData + new_section.SizeOfRawData, NULL, FILE_BEGIN);

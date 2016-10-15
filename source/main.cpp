@@ -9,6 +9,12 @@
 // MIT license
 #include "utils/SimpleOpt.h"
 
+// These are assembly procedures
+extern "C" {
+	void Entry();
+	void EntryEnd();
+}
+
 const char *default_section_name = ".end";
 
 struct FilePath {
@@ -64,11 +70,9 @@ int _tmain(int argc, wchar_t *argv[]) {
 				wcstombs_s(&name_bytes_copied, target_section_name, name_size, args.OptionArg(), name_size);
 				break;
 			}
-		}
-		else if (eso_state == SO_OPT_INVALID) {
+		} else if (eso_state == SO_OPT_INVALID) {
 			_tprintf(L"* Error, unknown option was given: %s\n", args.OptionText());
-		}
-		else if (eso_state == SO_ARG_MISSING) {
+		} else if (eso_state == SO_ARG_MISSING) {
 			_tprintf(L"* Error, missing argument was given for: %s\n", args.OptionText());
 		}
 	}
@@ -97,27 +101,31 @@ int _tmain(int argc, wchar_t *argv[]) {
 		file_path.extension, _MAX_EXT);
 
 	ExeManager *exe_manager;
+	char *function_buffer;
 
 	try {
 		exe_manager = &ExeManager(target_filepath);
 		_tprintf(L"* Loaded executable file %s%s into buffer.\n", file_path.file_name, file_path.extension);
-	}
-	catch (std::runtime_error) {
+	} catch (std::runtime_error) {
 		_tprintf(L"* Error, could not open the executable file: %s%s\n", file_path.file_name, file_path.extension);
 		return 1;
 	}
 
 	if (exe_manager->ModifyFile(target_section_name)) {
 		return 1;
-	}
-	else {
+	} else {
 		_tprintf(L"* Modified buffer for executable file %s%s.\n", file_path.file_name, file_path.extension);
+	}
+
+	if (exe_manager->CopyProcedure(function_buffer, Entry, EntryEnd)) {
+		return 1;
+	} else {
+		_tprintf(L"* Copied procedure into buffer.\n");
 	}
 
 	if (exe_manager->SaveFile()) {
 		return 1;
-	}
-	else {
+	} else {
 		_tprintf(L"* The changes to the executable file have been saved.\n");
 	}
 
