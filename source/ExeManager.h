@@ -22,7 +22,6 @@ private:
     DWORD file_size;
     DWORD first_section_offset;
     char *file_buffer;
-    char *function_buffer;
 
     PIMAGE_DOS_HEADER dos_header;
     PIMAGE_NT_HEADERS nt_header;
@@ -31,12 +30,10 @@ private:
     PIMAGE_SECTION_HEADER *section_headers;
     IMAGE_SECTION_HEADER new_section;
 
-    size_t function_buffer_size;
-
     static DWORD Align(DWORD number, DWORD multiple);
 public:
+	static DWORD CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr Proc_end_ptr);
     ExeManager(wchar_t *target_filepath);
-	int CopyProcedure(char *function_buffer, funptr ProcPtr, funptr ProcEndPtr);
-    int ModifyFile(char *pszSectionName);
-    int SaveFile();
+    int ModifyFile(char *new_section_name, DWORD code_size);
+    int SaveFile(char *code_buffer, DWORD code_buffer_size);
 };

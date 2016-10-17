@@ -46,34 +46,33 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 }
 
 //TODO: This is not good. Works in release (not debug) mode only. Also unpredictable behavior
-int ExeManager::CopyProcedure(char * function_buffer, funptr ProcPtr, funptr ProcEndPtr) {
-	size_t addr_entry = (size_t)ProcPtr;
-	size_t addr_entry_end = (size_t)ProcEndPtr;
+DWORD ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc_end_ptr) {
+	size_t addr_entry = (size_t)proc_ptr;
+	size_t addr_entry_end = (size_t)proc_end_ptr;
 
 	if (addr_entry > addr_entry_end) {
 		throw std::runtime_error("CopyProcedure(): Procedure pointer is greater than ending procedure pointer.");
 	}
 
-	function_buffer_size = addr_entry_end - addr_entry;
-	function_buffer = new char[function_buffer_size];
-	memcpy(function_buffer, reinterpret_cast<char*>(&ProcPtr), function_buffer_size);
+	size_t code_buffer_size = addr_entry_end - addr_entry;
+	code_buffer = new char[code_buffer_size];
+	memcpy(code_buffer, reinterpret_cast<char*>(&proc_ptr), code_buffer_size);
 
-	return 0;
+	return code_buffer_size;
 }
 
-int ExeManager::ModifyFile(char *new_section_name) {
+int ExeManager::ModifyFile(char *new_section_name, DWORD code_size) {
 	memset(&new_section, 0, sizeof(IMAGE_SECTION_HEADER));
 
 	PIMAGE_SECTION_HEADER last_section = section_headers[file_header->NumberOfSections - 1];
 
 	//TODO: Get size of new code section from function_buffer
-	DWORD dwSectionSize = 200;
-	DWORD dwSectionSizeAligned = Align(dwSectionSize, optional_header->FileAlignment);
+	DWORD section_size_aligned = Align(code_size, optional_header->FileAlignment);
 
 	new_section.Characteristics = characteristics;
-	new_section.SizeOfRawData = dwSectionSizeAligned;
+	new_section.SizeOfRawData = section_size_aligned;
 
-	new_section.Misc.VirtualSize = Align(dwSectionSizeAligned, 
+	new_section.Misc.VirtualSize = Align(section_size_aligned,
 		optional_header->SectionAlignment);
 
 	new_section.PointerToRawData = Align(last_section->SizeOfRawData + last_section->PointerToRawData, 
@@ -100,19 +99,18 @@ int ExeManager::ModifyFile(char *new_section_name) {
 	return 0;
 }
 
-int ExeManager::SaveFile() {
+int ExeManager::SaveFile(char *code_buffer, DWORD code_buffer_size) {
 	DWORD bytes_written = 0;
 	SetFilePointer(executable_handle, 0, NULL, FILE_BEGIN);
 	WriteFile(executable_handle, file_buffer, file_size, &bytes_written, NULL);
 
 	SetFilePointer(executable_handle, new_section.PointerToRawData, NULL, FILE_BEGIN);
-	WriteFile(executable_handle, function_buffer, function_buffer_size, &bytes_written, NULL);
+	WriteFile(executable_handle, code_buffer, code_buffer_size, &bytes_written, NULL);
 
 	CloseHandle(executable_handle);
 
 	delete[] file_buffer;
 	delete[] section_headers;
-	delete[] function_buffer;
 
 	return 0;
 }

@@ -101,7 +101,6 @@ int _tmain(int argc, wchar_t *argv[]) {
 		file_path.extension, _MAX_EXT);
 
 	ExeManager *exe_manager = NULL;
-	char *function_buffer = NULL;
 
 	try {
 		exe_manager = &ExeManager(target_filepath);
@@ -111,25 +110,30 @@ int _tmain(int argc, wchar_t *argv[]) {
 		return 1;
 	}
 
-	if (exe_manager->ModifyFile(target_section_name)) {
-		return 1;
-	} else {
-		_tprintf(L"* Modified buffer for executable file %s%s.\n", file_path.file_name, file_path.extension);
-	}
+	char *code_buffer;
+	DWORD code_size;
 
 	try {
-		exe_manager->CopyProcedure(function_buffer, Entry, EntryEnd);
+		code_size = ExeManager::CopyProcedure(code_buffer, Entry, EntryEnd);
 		_tprintf(L"* Copied procedure into buffer.\n");
 	} catch (std::runtime_error) {
 		_tprintf(L"* Error, could not copy procedure.\n");
 		return 1;
 	}
 
-	if (exe_manager->SaveFile()) {
+	if (exe_manager->ModifyFile(target_section_name, code_size)) {
+		return 1;
+	} else {
+		_tprintf(L"* Modified buffer for executable file %s%s.\n", file_path.file_name, file_path.extension);
+	}
+
+	if (exe_manager->SaveFile(code_buffer, code_size)) {
 		return 1;
 	} else {
 		_tprintf(L"* The changes to the executable file have been saved.\n");
 	}
+
+	delete[] code_buffer;
 
 	return 0;
 }
