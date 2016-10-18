@@ -11,10 +11,10 @@ option casemap :none
 ; Needs stepping through to ensure that the module base address being fetched is correct
 Entry PROC
 	ASSUME FS:NOTHING
-	CALL CURRENTADDR
-	CURRENTADDR: POP DWORD PTR SS:[EBP-0Ch]
-	MOV EAX, DWORD PTR FS:[30h]
-	MOV DWORD PTR SS:[EBP-24h], EAX
+	CALL CURRENTADDR						;  
+	CURRENTADDR: POP DWORD PTR SS:[EBP-0Ch] ; Store current address into stack segment
+	MOV EAX, DWORD PTR FS:[30h]				; Get PEB pointer from general-purpose FS register
+	MOV DWORD PTR SS:[EBP-24h], EAX			; Store PEB pointer in stack segment
 	MOV EAX, DWORD PTR SS:[EBP-24h]
 	MOV ECX, DWORD PTR DS:[EAX+0Ch]
 	MOV EDX, DWORD PTR DS:[ECX+0Ch]
@@ -42,10 +42,10 @@ Entry PROC
 		MOV DWORD PTR SS:[EBP-24h], ECX
 		JMP SHORT SEARCHPEB
 	FINISH:
-		MOV EDX, DWORD PTR SS:[EBP-18h]
-		MOV EAX, 000001563h		; Hard coded OEP constant. Will need to replace
-		OR EDX, EAX
-		JMP EDX
+		MOV EDX, DWORD PTR SS:[EBP-18h]	; Get base address
+		MOV EAX, C1C2C3C4h				; Get original entry point
+		OR EDX, EAX						; Bitwise or them together
+		JMP EDX							; Jump to the entry point
 	ASSUME FS:ERROR
 Entry ENDP
 

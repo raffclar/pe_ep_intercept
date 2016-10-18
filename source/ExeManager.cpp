@@ -50,8 +50,8 @@ DWORD ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc
 	size_t addr_entry = (size_t)proc_ptr;
 	size_t addr_entry_end = (size_t)proc_end_ptr;
 
-	if (addr_entry > addr_entry_end) {
-		throw std::runtime_error("CopyProcedure(): Procedure pointer is greater than ending procedure pointer.");
+	if (addr_entry >= addr_entry_end) {
+		throw std::runtime_error("CopyProcedure(): Procedure pointer is greater or equal than ending procedure pointer.");
 	}
 
 	size_t code_buffer_size = addr_entry_end - addr_entry;
@@ -62,8 +62,6 @@ DWORD ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc
 }
 
 int ExeManager::ModifyFile(char *new_section_name, DWORD code_size) {
-	memset(&new_section, 0, sizeof(IMAGE_SECTION_HEADER));
-
 	PIMAGE_SECTION_HEADER last_section = section_headers[file_header->NumberOfSections - 1];
 
 	//TODO: Get size of new code section from function_buffer
