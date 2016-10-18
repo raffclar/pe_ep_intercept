@@ -134,7 +134,13 @@ int _tmain(int argc, wchar_t *argv[]) {
 			DWORD entry = exe_manager->GetOriginalEntryPointer();
 			memcpy(&code_buffer[index], &entry, sizeof(DWORD));
 			_tprintf(L"* Found signature, replacing with 0x%04x.\n", entry);
+		} else {
+			_tprintf(L"* Error, unable to find signature inside code buffer.\n");
+			return 1;
 		}
+	} else {
+		_tprintf(L"* Error, unable to change signature inside code buffer.\n");
+		return 1;
 	}
 
 	if (exe_manager->ModifyFile(target_section_name, code_size)) {
