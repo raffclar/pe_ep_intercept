@@ -36,4 +36,5 @@ public:
     ExeManager(wchar_t *target_filepath);
     int ModifyFile(char *new_section_name, DWORD code_size);
     int SaveFile(char *code_buffer, DWORD code_buffer_size);
+	DWORD GetOriginalEntryPointer();
 };

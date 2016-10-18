@@ -2,8 +2,6 @@
 #include <stdexcept>
 #include <exception>
 
-#define OEP_SIG 0xC1C2C3C4
-
 const DWORD ExeManager::characteristics = 
 	IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
 	IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
@@ -111,4 +109,8 @@ int ExeManager::SaveFile(char *code_buffer, DWORD code_buffer_size) {
 	delete[] section_headers;
 
 	return 0;
+}
+
+DWORD ExeManager::GetOriginalEntryPointer() {
+	return optional_header->AddressOfEntryPoint;
 }

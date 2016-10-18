@@ -43,7 +43,7 @@ Entry PROC
 		JMP SHORT SEARCHPEB
 	FINISH:
 		MOV EDX, DWORD PTR SS:[EBP-18h]	; Get base address
-		MOV EAX, C1C2C3C4h				; Get original entry point
+		MOV EAX, 0C1C2C3C4h				; Get original entry point
 		OR EDX, EAX						; Bitwise or them together
 		JMP EDX							; Jump to the entry point
 	ASSUME FS:ERROR

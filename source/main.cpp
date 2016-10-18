@@ -9,6 +9,8 @@
 // MIT license
 #include "utils/SimpleOpt.h"
 
+typedef std::basic_string<unsigned char> UString;
+
 // These are assembly procedures
 extern "C" {
 	void Entry();
@@ -119,6 +121,20 @@ int _tmain(int argc, wchar_t *argv[]) {
 	} catch (std::runtime_error) {
 		_tprintf(L"* Error, could not copy procedure.\n");
 		return 1;
+	}
+
+	unsigned char bytes[4] = { 0xC4, 0xC3, 0xC2, 0xC1 };
+	UString signature(bytes, bytes + 4);
+
+	if (code_size <= signature.max_size()) {
+		UString code_buffer_str(code_buffer, code_buffer + code_size);
+		std::size_t index = code_buffer_str.find(signature);
+
+		if (index != std::string::npos) {
+			DWORD entry = exe_manager->GetOriginalEntryPointer();
+			memcpy(&code_buffer[index], &entry, sizeof(DWORD));
+			_tprintf(L"* Found signature, replacing with 0x%04x.\n", entry);
+		}
 	}
 
 	if (exe_manager->ModifyFile(target_section_name, code_size)) {
