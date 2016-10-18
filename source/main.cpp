@@ -18,6 +18,7 @@ extern "C" {
 }
 
 const char *default_section_name = ".end";
+const unsigned char bytes[4] = { 0xC4, 0xC3, 0xC2, 0xC1 };
 
 struct FilePath {
 	wchar_t drive[_MAX_DRIVE];
@@ -123,7 +124,6 @@ int _tmain(int argc, wchar_t *argv[]) {
 		return 1;
 	}
 
-	unsigned char bytes[4] = { 0xC4, 0xC3, 0xC2, 0xC1 };
 	UString signature(bytes, bytes + 4);
 
 	if (code_size <= signature.max_size()) {
@@ -132,8 +132,8 @@ int _tmain(int argc, wchar_t *argv[]) {
 
 		if (index != std::string::npos) {
 			DWORD entry = exe_manager->GetOriginalEntryPointer();
-			memcpy(&code_buffer[index], &entry, sizeof(DWORD));
 			_tprintf(L"* Found signature, replacing with 0x%04x.\n", entry);
+			memcpy(&code_buffer[index], &entry, sizeof(DWORD));
 		} else {
 			_tprintf(L"* Error, unable to find signature inside code buffer.\n");
 			return 1;
