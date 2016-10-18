@@ -1,9 +1,9 @@
-﻿#include <iostream>
+﻿#include "ExeManager.h"
+
+#include <iostream>
 #include <string>
 #include <vector>
 #include <limits>
-
-#include "ExeManager.h"
 
 // https://github.com/brofield/simpleopt
 // MIT license

@@ -23,8 +23,18 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 	// Load contents of the file into an array
 	DWORD bytes_read = 0;
 	file_size = GetFileSize(executable_handle, NULL);
-	file_buffer = new char[file_size];
-	ReadFile(executable_handle, file_buffer, file_size, &bytes_read, NULL);
+	bool success = false;
+
+	if (file_size != INVALID_FILE_SIZE) {
+		file_buffer = new char[file_size];
+		success = ReadFile(executable_handle, file_buffer, file_size, &bytes_read, NULL);
+	} else {
+		throw std::runtime_error("CreateFile(): Failed to get size of file.");
+	}
+
+	if (!success) {
+		throw std::runtime_error("CreateFile(): Failed to read file.");
+	}
 
 	// Portable Executable headers
 	dos_header = (PIMAGE_DOS_HEADER)file_buffer;
