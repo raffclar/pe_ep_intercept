@@ -131,7 +131,7 @@ int _tmain(int argc, wchar_t *argv[]) {
 		std::size_t index = code_buffer_str.find(signature);
 
 		if (index != std::string::npos) {
-			DWORD entry = exe_manager->GetOriginalEntryPointer();
+			DWORD entry = exe_manager->GetOriginalEntryPoint();
 			_tprintf(L"* Found signature, replacing with 0x%04x.\n", entry);
 			memcpy(&code_buffer[index], &entry, sizeof(DWORD));
 		} else {
@@ -139,7 +139,8 @@ int _tmain(int argc, wchar_t *argv[]) {
 			return 1;
 		}
 	} else {
-		_tprintf(L"* Error, unable to change signature inside code buffer.\n");
+		_tprintf(L"* Error, unable to change signature inside code buffer:\n");
+		_tprintf(L"* Code buffer is too large to search.\n");
 		return 1;
 	}
 

@@ -111,6 +111,6 @@ int ExeManager::SaveFile(char *code_buffer, DWORD code_buffer_size) {
 	return 0;
 }
 
-DWORD ExeManager::GetOriginalEntryPointer() {
+DWORD ExeManager::GetOriginalEntryPoint() {
 	return optional_header->AddressOfEntryPoint;
 }
