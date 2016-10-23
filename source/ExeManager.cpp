@@ -63,7 +63,7 @@ DWORD ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc
 
 	size_t code_buffer_size = addr_entry_end - addr_entry;
 	code_buffer = new char[code_buffer_size];
-	memcpy(code_buffer, reinterpret_cast<char*>(proc_ptr), code_buffer_size);
+	memcpy(code_buffer, (char*)proc_ptr, code_buffer_size);
 
 	return code_buffer_size;
 }

@@ -14,7 +14,7 @@ Entry PROC
 	CALL CURRENTADDR
 	CURRENTADDR: POP DWORD PTR SS:[EBP-0Ch] ; Store current address into stack segment
 	MOV EAX, DWORD PTR FS:[30h] ; Get PEB pointer from general-purpose FS register
-	MOV DWORD PTR SS:[EBP-24h], EAX ; Store PEB pointer in stack segment
+	MOV DWORD PTR SS:[EBP-24h], EAX ; Store PEB pointer into stack segment
 	MOV EAX, DWORD PTR SS:[EBP-24h]
 	MOV ECX, DWORD PTR DS:[EAX+0Ch]
 	MOV EDX, DWORD PTR DS:[ECX+0Ch]
@@ -43,7 +43,7 @@ Entry PROC
 		JMP SHORT SEARCHPEB
 	FINISH:
 		MOV EDX, DWORD PTR SS:[EBP-18h]	; Get base address
-		MOV EAX, 0C1C2C3C4h ; Get original entry point
+		MOV EAX, 0C1C2C3C4h ; Get original entry point (this fixed-value is replaced at runtime)
 		OR EDX, EAX ; Bitwise or them together
 		JMP EDX ; Jump to the entry point
 	ASSUME FS:ERROR
