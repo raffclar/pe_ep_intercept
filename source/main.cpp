@@ -11,14 +11,15 @@
 
 typedef std::basic_string<unsigned char> UString;
 
-// These are assembly procedures
 extern "C" {
 	void Entry();
 	void EntryEnd();
 }
 
+const size_t name_size = IMAGE_SIZEOF_SHORT_NAME / 2;
 const char *default_section_name = ".end";
-const unsigned char bytes[4] = { 0xC4, 0xC3, 0xC2, 0xC1 };
+const size_t sig_size = 4;
+const char sig_bytes[sig_size] = { '\xC4', '\xC3', '\xC2', '\xC1' };
 
 struct FilePath {
 	wchar_t drive[_MAX_DRIVE];
@@ -52,7 +53,6 @@ int _tmain(int argc, wchar_t *argv[]) {
 
 	CSimpleOpt args(argc, argv, g_rgOptions, SO_O_EXACT);
 
-	const size_t name_size = IMAGE_SIZEOF_SHORT_NAME / 2;
 	char target_section_name[name_size];
 	size_t name_bytes_copied = 0;
 
@@ -80,12 +80,10 @@ int _tmain(int argc, wchar_t *argv[]) {
 		}
 	}
 
-	//TODO: Replace empty char array check with file path validator
-	// Quit if the above parsing fails otherwise we validate the path argument
 	if (eso_state != SO_SUCCESS) {
 		printUsage();
 		return 1;
-	} else if (target_filepath[0] == '\0') {
+	} else if (target_filepath == NULL) {
 		_tprintf(L"* Error, path cannot be empty.\n\n");
 		printUsage();
 		return 1;
@@ -106,7 +104,7 @@ int _tmain(int argc, wchar_t *argv[]) {
 	ExeManager *exe_manager = NULL;
 
 	try {
-		exe_manager = &ExeManager(target_filepath);
+		exe_manager =  new ExeManager(target_filepath);
 		_tprintf(L"* Loaded executable file %s%s into buffer.\n", file_path.file_name, file_path.extension);
 	} catch (std::runtime_error) {
 		_tprintf(L"* Error, could not open the executable file: %s%s\n", file_path.file_name, file_path.extension);
@@ -124,21 +122,31 @@ int _tmain(int argc, wchar_t *argv[]) {
 		return 1;
 	}
 
-	UString signature(bytes, bytes + 4);
+	unsigned int search_index = 1;
 
-	if (code_size <= signature.max_size()) {
-		UString code_buffer_str(code_buffer, code_buffer + code_size);
-		std::size_t index = code_buffer_str.find(signature);
+	for (DWORD x = 0; x < code_size - sig_size; x++) {
+		if (code_buffer[x] != sig_bytes[0]) {
+			continue;
+		}
+		
+		for (int y = 1; y < sig_size; y++) {
+			if (code_buffer[x + y] == sig_bytes[y]) {
+				search_index++;
+			} else {
+				search_index = 1;
+				break;
+			}
+		}
 
-		if (index != std::string::npos) {
+		if (search_index == sig_size) {
 			DWORD entry = exe_manager->GetOriginalEntryPoint();
 			_tprintf(L"* Found signature, replacing with 0x%04x.\n", entry);
-			memcpy(&code_buffer[index], &entry, sizeof(DWORD));
-		} else {
-			_tprintf(L"* Error, unable to find signature inside code buffer.\n");
-			return 1;
+			memcpy(&code_buffer[x], &entry, sizeof(DWORD));
+			break;
 		}
-	} else {
+	}
+
+	if(search_index != sig_size){
 		_tprintf(L"* Error, unable to change signature inside code buffer:\n");
 		_tprintf(L"* Code buffer is too large to search.\n");
 		return 1;
@@ -156,6 +164,7 @@ int _tmain(int argc, wchar_t *argv[]) {
 		_tprintf(L"* The changes to the executable file have been saved.\n");
 	}
 
+	delete[] exe_manager;
 	delete[] code_buffer;
 
 	return 0;

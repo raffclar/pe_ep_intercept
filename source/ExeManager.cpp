@@ -20,10 +20,9 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 		throw std::runtime_error("CreateFile(): Failed to open file.");
 	}
 
-	// Load contents of the file into an array
 	DWORD bytes_read = 0;
 	file_size = GetFileSize(executable_handle, NULL);
-	bool success = false;
+	int success = false;
 
 	if (file_size != INVALID_FILE_SIZE) {
 		file_buffer = new char[file_size];
