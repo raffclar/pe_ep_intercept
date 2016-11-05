@@ -9,8 +9,6 @@
 // MIT license
 #include "utils/SimpleOpt.h"
 
-typedef std::basic_string<unsigned char> UString;
-
 extern "C" {
 	void Entry();
 	void EntryEnd();
