@@ -28,14 +28,14 @@ private:
     PIMAGE_FILE_HEADER file_header;
     PIMAGE_OPTIONAL_HEADER optional_header;
     PIMAGE_SECTION_HEADER *section_headers;
-    IMAGE_SECTION_HEADER new_section;
 
     static DWORD Align(DWORD number, DWORD multiple);
     static void PrintError();
 public:
-	static DWORD CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr Proc_end_ptr);
+	static size_t CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr Proc_end_ptr);
     ExeManager(wchar_t *target_filepath);
-    int AddNewSection(char *new_section_name, DWORD code_size);
-    int SaveFile(char *code_buffer, DWORD code_buffer_size);
+    bool AddNewSection(char *new_section_name, DWORD code_size);
+    bool AddNewCodeToSection(int section_index);
+    bool SaveFile(char *code_buffer, DWORD code_buffer_size);
 	DWORD GetOriginalEntryPoint();
 };

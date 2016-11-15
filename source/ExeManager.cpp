@@ -15,8 +15,7 @@ void ExeManager::PrintError() {
     size_t size = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), message_buffer, 256, NULL);
 
-    std::wstring message(message_buffer, size); 
-    _tprintf(L"* %s\n", message);
+    _tprintf(L"* %s\n", message_buffer);
     LocalFree(message_buffer);
 }
 
@@ -29,18 +28,15 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 	if (executable_handle == INVALID_HANDLE_VALUE)
 		throw std::runtime_error("CreateFile(): Failed to open file.");
 
-	DWORD bytes_read = 0;
 	file_size = GetFileSize(executable_handle, NULL);
-	int success = false;
 
-	if (file_size != INVALID_FILE_SIZE) {
-		file_buffer = new char[file_size];
-		success = ReadFile(executable_handle, file_buffer, file_size, &bytes_read, NULL);
-	} else {
-		throw std::runtime_error("CreateFile(): Failed to get size of file.");
-	}
+	if (file_size == INVALID_FILE_SIZE)
+	    throw std::runtime_error("CreateFile(): Failed to get size of file.");
 
-	if (!success)
+    DWORD bytes_read = 0;
+    file_buffer = new char[file_size];
+
+	if (ReadFile(executable_handle, file_buffer, file_size, &bytes_read, NULL) == false)
 	    throw std::runtime_error("CreateFile(): Failed to read file.");
 
 	// Portable Executable headers
@@ -61,7 +57,7 @@ ExeManager::ExeManager(wchar_t *target_filepath) {
 }
 
 //TODO: This is not good. Works in release (not debug) mode only. Also unpredictable behavior
-DWORD ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc_end_ptr) {
+size_t ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc_end_ptr) {
 	size_t addr_entry = (size_t)proc_ptr;
 	size_t addr_entry_end = (size_t)proc_end_ptr;
 
@@ -75,12 +71,13 @@ DWORD ExeManager::CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr proc
 	return code_buffer_size;
 }
 
-int ExeManager::AddNewSection(char *new_section_name, DWORD code_size) {
+bool ExeManager::AddNewSection(char *new_section_name, DWORD code_size) {
 	PIMAGE_SECTION_HEADER last_section = section_headers[file_header->NumberOfSections - 1];
+    IMAGE_SECTION_HEADER new_section;
 
 	DWORD section_size_aligned = Align(code_size, optional_header->FileAlignment);
-
-	new_section.Characteristics = characteristics;
+    
+    new_section.Characteristics = characteristics;
 
 	new_section.SizeOfRawData = section_size_aligned;
 
@@ -113,16 +110,32 @@ int ExeManager::AddNewSection(char *new_section_name, DWORD code_size) {
 	if(SetEndOfFile(executable_handle) == false)
         throw std::runtime_error("AddNewSection(): Failed to set end-of-file.");
         
-	return true;
+	return 0;
 }
 
-int ExeManager::SaveFile(char *code_buffer, DWORD code_buffer_size) {
-	DWORD bytes_written = 0;
-	SetFilePointer(executable_handle, 0, NULL, FILE_BEGIN);
-	WriteFile(executable_handle, file_buffer, file_size, &bytes_written, NULL);
+bool ExeManager::AddNewCodeToSection(int section_index) {
+    return false;
+}
 
-	SetFilePointer(executable_handle, new_section.PointerToRawData, NULL, FILE_BEGIN);
-	WriteFile(executable_handle, code_buffer, code_buffer_size, &bytes_written, NULL);
+bool ExeManager::SaveFile(char *code_buffer, DWORD code_buffer_size) {
+	DWORD bytes_written = 0;
+	DWORD state = SetFilePointer(executable_handle, 0, NULL, FILE_BEGIN);
+
+    if (state == INVALID_SET_FILE_POINTER)
+        throw std::runtime_error("SaveFile(): Failed to set a file pointer.");
+
+	if (WriteFile(executable_handle, file_buffer, file_size, &bytes_written, NULL) == false)
+        throw std::runtime_error("SaveFile(): Failed to save to file.");
+
+    PIMAGE_SECTION_HEADER last_section = section_headers[file_header->NumberOfSections - 1];
+    state = SetFilePointer(executable_handle, last_section->PointerToRawData, NULL, FILE_BEGIN);
+    
+    // Add new code to new section
+    if (state == INVALID_SET_FILE_POINTER)
+        throw std::runtime_error("SaveFile(): Failed to set a file pointer for new code.");
+
+	if(WriteFile(executable_handle, code_buffer, code_buffer_size, &bytes_written, NULL))
+        throw std::runtime_error("SaveFile(): Failed to save to file for new code.");
 
 	CloseHandle(executable_handle);
 
