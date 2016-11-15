@@ -31,10 +31,11 @@ private:
     IMAGE_SECTION_HEADER new_section;
 
     static DWORD Align(DWORD number, DWORD multiple);
+    static void PrintError();
 public:
 	static DWORD CopyProcedure(char *&code_buffer, funptr proc_ptr, funptr Proc_end_ptr);
     ExeManager(wchar_t *target_filepath);
-    int ModifyFile(char *new_section_name, DWORD code_size);
+    int AddNewSection(char *new_section_name, DWORD code_size);
     int SaveFile(char *code_buffer, DWORD code_buffer_size);
 	DWORD GetOriginalEntryPoint();
 };

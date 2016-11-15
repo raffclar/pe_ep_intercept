@@ -14,7 +14,7 @@ extern "C" {
 	void EntryEnd();
 }
 
-const size_t name_size = IMAGE_SIZEOF_SHORT_NAME / 2;
+const size_t name_size = IMAGE_SIZEOF_SHORT_NAME;
 const char *default_section_name = ".end";
 const size_t sig_size = 4;
 const char sig_bytes[sig_size] = { '\xC4', '\xC3', '\xC2', '\xC1' };
@@ -150,7 +150,7 @@ int _tmain(int argc, wchar_t *argv[]) {
 		return 1;
 	}
 
-	if (exe_manager->ModifyFile(target_section_name, code_size)) {
+	if (exe_manager->AddNewSection(target_section_name, code_size)) {
 		return 1;
 	} else {
 		_tprintf(L"* Modified buffer for executable file %s%s.\n", file_path.file_name, file_path.extension);
