@@ -89,10 +89,6 @@ std::string PePatch::CreateEntryPointSubroutine(uint32_t original_entry_point) {
     address.resize(9);
     snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
 
-    //"CALL CURRENTADDR;"
-    //"CURRENTADDR:"
-    //"POP DWORD PTR SS:[EBP-0Ch];" // Store current address into stack segment
-
     return "LEA RAX, [RIP];";
 }
 
