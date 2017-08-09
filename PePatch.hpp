@@ -23,8 +23,9 @@ private:
     std::vector<IMAGE_SECTION_HEADER> section_headers;
 public:
     explicit PePatch(std::string path);
-    std::string CreateEntryPointSubroutine(uint32_t original_entry_point);
+    std::string CreateEntryPointCode(uint32_t original_entry_point);
     std::vector<char> Assemble(const std::string &assembly);
+    bool HasSection(const std::string &section_name);
     void AddSection(const std::string &new_section_name, uint32_t code_size);
     void SaveFile(std::string new_path, std::vector<char> code_buffer);
 };
