@@ -79,12 +79,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    section = ".code";
+
     try {
         PePatch patcher(target_file);
-        auto instructions = patcher.CreateEntryPointSubroutine(100);
+        auto instructions = patcher.CreateEntryPointCode(100);
         auto machine_code = patcher.Assemble(instructions);
         auto code_size = static_cast<uint32_t>(machine_code.size());
-        patcher.AddSection(section, code_size);
+
+        if (patcher.HasSection(section)) {
+            std::cout << "Has section \"" << section << "\"." << std::endl;
+        } else {
+            patcher.AddSection(section, code_size);
+        }
+
         patcher.SaveFile("a2.exe", machine_code);
     } catch (std::runtime_error &err) {
         std::cout << err.what() << std::endl;
