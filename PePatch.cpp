@@ -68,7 +68,7 @@ PePatch::PePatch(std::string path) : path(path) {
         throw std::runtime_error("could not get file size");
     }
 
-    file_buffer.resize((uint32_t) size);
+    std::vector<char> file_buffer((uint32_t) size);
 
     if (!file_input.read(file_buffer.data(), size)) {
         throw std::runtime_error("could not read file");
@@ -97,10 +97,10 @@ PePatch::PePatch(std::string path) : path(path) {
 
     // Excludes headers since we already have the initialised structs
     auto data_start = file_buffer.begin() + rest_of_data;
-    std::vector<char> file_contents(data_start, file_buffer.end());
+    this->file_buffer.assign(data_start, file_buffer.end());
 }
 
-std::string PePatch::CreateEntryPointSubroutine(uint32_t original_entry_point) {
+std::string PePatch::CreateEntryPointCode(uint32_t original_entry_point) {
     std::string address;
     address.resize(9);
     snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
@@ -133,7 +133,6 @@ std::vector<char> PePatch::Assemble(const std::string &assembly) {
         ks_close(ks_ptr);
     };
 
-
     if (ks_open(KS_ARCH_X86, KS_MODE_64, &ks) != KS_ERR_OK) {
         throw std::runtime_error("failed to open keystone");
     }
@@ -158,6 +157,16 @@ std::vector<char> PePatch::Assemble(const std::string &assembly) {
     }
 
     return instructions;
+}
+
+bool PePatch::HasSection(const std::string &section_name) {
+    for (auto &section : section_headers) {
+        if (reinterpret_cast<char *>(section.Name) == section_name) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void PePatch::AddSection(const std::string &new_section_name, uint32_t code_size) {
