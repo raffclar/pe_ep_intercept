@@ -1,7 +1,7 @@
-#include <iostream>
+#include "PePatch.hpp"
 #include <keystone/keystone.h>
 #include <cinttypes>
-#include "PePatch.hpp"
+#include <iostream>
 
 const static uint32_t SECTION_MAX_NAME_SIZE = IMAGE_SIZEOF_SHORT_NAME;
 
@@ -9,29 +9,33 @@ const static uint32_t SECTION_CHARACTERISTICS =
         IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
         IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 
-uint32_t PePatch::Align(uint32_t num, uint32_t multiple) {
+uint32_t Align(uint32_t num, uint32_t multiple) {
     return ((num + multiple - 1) / multiple) * multiple;
 }
 
-bool PePatch::ReplaceDword(std::vector<char> code_buffer, uint32_t target_value, uint32_t replacement_value) {
+bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
     for (size_t i = 0; i < code_buffer.size(); i++) {
-        if (code_buffer[i] != (target_value & 0xFF)) { // First byte
+        // First byte
+        if (code_buffer[i] != (target_dword & 0xFF)) {
             continue;
         }
 
         size_t j = 1;
 
         while (j < 4) {
-            if (code_buffer[i + j] == (target_value >> ((8 * j) & 0xFF))) { // Rest of bytes
+            // Rest of bytes
+            if (code_buffer[i + j] == (target_dword >> ((8 * j) & 0xFF))) {
                 j++;
             } else {
-                break; // Failed to match all bytes
+                // Failed to match all bytes
+                break;
             }
         }
 
         if (j == 4) {
             for (size_t re_i = 0; re_i < j; re_i++) {
-                auto replace_byte = static_cast<char>((replacement_value >> (8 * re_i)) & 0xFF);
+                uint32_t num = (replace_dword >> (8 * re_i)) & 0xFF;
+                auto replace_byte = static_cast<char>(num);
                 code_buffer[i + re_i] = replace_byte;
             }
 
@@ -42,7 +46,7 @@ bool PePatch::ReplaceDword(std::vector<char> code_buffer, uint32_t target_value,
     return false;
 }
 
-static std::vector<char> PePatch::CopyBytes(char *byte_start, char *byte_end) {
+static std::vector<char> CopyBytes(char *byte_start, char *byte_end) {
     if (byte_start >= byte_end) {
         throw std::runtime_error("pointer is greater or equal than ending pointer");
     }
@@ -75,11 +79,11 @@ PePatch::PePatch(std::string path) : path(path) {
     file_header = *(PIMAGE_FILE_HEADER) &nt_header->FileHeader;
     optional_header = *(PIMAGE_OPTIONAL_HEADER) &nt_header->OptionalHeader;
     nt_header_signature = nt_header->Signature;
-    uint32_t first_section_offset = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS);
+    uint32_t first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS);
 
     for (uint32_t i = 0; i < file_header.NumberOfSections; i++) {
-        uint32_t next_section_offset = first_section_offset + (i * sizeof(IMAGE_SECTION_HEADER));
-        auto hdr = *(PIMAGE_SECTION_HEADER) &raw_buffer[next_section_offset];
+        uint32_t next_section = first_section + (i * sizeof(IMAGE_SECTION_HEADER));
+        auto hdr = *(PIMAGE_SECTION_HEADER) &raw_buffer[next_section];
         section_headers.push_back(hdr);
     }
 }
@@ -89,33 +93,56 @@ std::string PePatch::CreateEntryPointSubroutine(uint32_t original_entry_point) {
     address.resize(9);
     snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
 
-    return "LEA RAX, [RIP];";
+    return "push rbp;"
+            "mov rbp, rsp;"
+            "lea rax, [rip];"
+            "sub rsp, 8;"
+            "mov [rbp - 4], rax;" // current address
+            "mov rdx, fs:[30h];"
+            "mov [rbp - 8], rdx;" // peb
+            "mov rcx, [rdx + 12];"; // 12 bytes into the peb and we get loader_data
 }
 
 std::vector<char> PePatch::Assemble(const std::string &assembly) {
     std::vector<char> instructions;
-    unsigned char *encode;
-    ks_engine *ks;
+    unsigned char *encode = nullptr;
+    ks_engine *ks = nullptr;
     size_t count;
     size_t size;
+
+    auto code_deleter = [](unsigned char *code_ptr) {
+        ks_free(code_ptr);
+    };
+
+    auto ks_deleter = [](ks_engine *ks_ptr) {
+        ks_close(ks_ptr);
+    };
+
 
     if (ks_open(KS_ARCH_X86, KS_MODE_64, &ks) != KS_ERR_OK) {
         throw std::runtime_error("failed to open keystone");
     }
 
+    std::unique_ptr<ks_engine[],
+            decltype(ks_deleter)> ks_ptr(ks, ks_deleter);
+
     if (ks_asm(ks, assembly.c_str(), 0, &encode, &size, &count) != KS_ERR_OK) {
         throw std::runtime_error("failed to assemble instructions");
     }
 
-    for (size_t i = 0; i < size; i++) {
-        instructions.push_back(static_cast<char>(encode[i]));
+    std::unique_ptr<unsigned char[],
+            decltype(code_deleter)> encode_ptr(encode, code_deleter);
+
+    if (size > 0xFFFFFFFF) {
+        throw std::runtime_error("exceeded max section size");
     }
 
-    ks_free(encode);
-    ks_close(ks);
+    for (size_t i = 0; i < size; i++) {
+        auto encoded = static_cast<char>(encode[i]);
+        instructions.push_back(encoded);
+    }
 
     return instructions;
-
 }
 
 void PePatch::AddSection(const std::string &new_section_name, uint32_t code_size) {
@@ -125,11 +152,15 @@ void PePatch::AddSection(const std::string &new_section_name, uint32_t code_size
 
     new_section.Characteristics = SECTION_CHARACTERISTICS;
     new_section.SizeOfRawData = aligned_size;
-    new_section.Misc.VirtualSize = Align(aligned_size, optional_header.SectionAlignment);
-    new_section.PointerToRawData = Align(last_section.SizeOfRawData + last_section.PointerToRawData,
-                                         optional_header.FileAlignment);
-    new_section.VirtualAddress = Align(last_section.Misc.VirtualSize + last_section.VirtualAddress,
-                                       optional_header.SectionAlignment);
+    new_section.Misc.VirtualSize = Align(
+            aligned_size,
+            optional_header.SectionAlignment);
+    new_section.PointerToRawData = Align(
+            last_section.SizeOfRawData + last_section.PointerToRawData,
+            optional_header.FileAlignment);
+    new_section.VirtualAddress = Align(
+            last_section.Misc.VirtualSize + last_section.VirtualAddress,
+            optional_header.SectionAlignment);
 
     for (size_t i = 0; i < SECTION_MAX_NAME_SIZE; i++) {
         char letter;
@@ -149,14 +180,16 @@ void PePatch::AddSection(const std::string &new_section_name, uint32_t code_size
     section_headers.push_back(new_section);
 }
 
-void PePatch::SaveFile(std::string new_path, std::vector<char> subroutine_buffer) {
+void PePatch::SaveFile(std::string new_path, std::vector<char> code_buffer) {
     char dos_bytes[sizeof(dos_header)];
     memcpy(dos_bytes, &dos_header, sizeof(dos_header));
     file_input.seekg(0);
     file_input.write(dos_bytes, sizeof(dos_header));
 
-    //
-    IMAGE_NT_HEADERS nt_headers{nt_header_signature, file_header, optional_header};
+    IMAGE_NT_HEADERS nt_headers{
+            nt_header_signature,
+            file_header,
+            optional_header};
 
     char nt_bytes[sizeof(nt_headers)];
     memcpy(nt_bytes, &nt_headers, sizeof(nt_headers));
@@ -173,13 +206,14 @@ void PePatch::SaveFile(std::string new_path, std::vector<char> subroutine_buffer
     }
 
     auto new_section = &section_headers.back();
-    uint32_t new_section_offset = new_section->PointerToRawData;
-    file_input.seekg(new_section_offset);
+    uint32_t code_position = new_section->PointerToRawData;
+    file_input.seekg(code_position);
 
-    // Padding is required otherwise the loader will fail the executable
-    while(subroutine_buffer.size() < new_section->SizeOfRawData) {
-        subroutine_buffer.push_back(0);
+    // Padding might be required otherwise the loader will fail
+    // when loading the executable
+    while (code_buffer.size() < new_section->SizeOfRawData) {
+        code_buffer.push_back(0);
     }
 
-    file_input.write(subroutine_buffer.data(), subroutine_buffer.size());
+    file_input.write(code_buffer.data(), code_buffer.size());
 }
