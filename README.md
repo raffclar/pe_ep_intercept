@@ -4,7 +4,7 @@ Creates a new section. Entry point is modified with new section's virtual addres
 with the original entry point (oep) using Keystone. Consideration is given with address space layout randomisation (ASLR).
 
 Two approaches for ASLR:
-1. Use peb (`fs[30h]`) -> loaded modules -> base address -> bitwise-or oep with base address. [Based on this post][1].
+1. Use peb (`fs[30h]` or `gs[60h]`) -> loaded modules -> base address -> bitwise-or oep with base address. [Based on this post][1].
 2. Add new entries to relocation table.
 
 The modified program jumps to the adjusted oep allowing normal execution of the program.
