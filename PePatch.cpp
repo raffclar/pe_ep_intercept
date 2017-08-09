@@ -57,7 +57,10 @@ static std::vector<char> CopyBytes(char *byte_start, char *byte_end) {
 
 PePatch::PePatch(std::string path) : path(path) {
     file_input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    file_input.open(path, std::ios::binary | std::ifstream::ate | std::fstream::in | std::fstream::out);
+    file_input.open(path, std::ios::binary |
+            std::ifstream::ate |
+            std::fstream::in |
+            std::fstream::out);
     std::streamsize size = file_input.tellg();
     file_input.seekg(0, std::ios::beg);
 
@@ -82,10 +85,19 @@ PePatch::PePatch(std::string path) : path(path) {
     uint32_t first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS);
 
     for (uint32_t i = 0; i < file_header.NumberOfSections; i++) {
-        uint32_t next_section = first_section + (i * sizeof(IMAGE_SECTION_HEADER));
+        uint32_t section_index = i * sizeof(IMAGE_SECTION_HEADER);
+        uint32_t next_section = first_section + section_index;
         auto hdr = *(PIMAGE_SECTION_HEADER) &raw_buffer[next_section];
         section_headers.push_back(hdr);
     }
+
+    auto rest_of_data = first_section;
+    auto count = static_cast<uint32_t>(section_headers.size());
+    rest_of_data += count * sizeof(IMAGE_SECTION_HEADER);
+
+    // Excludes headers since we already have the initialised structs
+    auto data_start = file_buffer.begin() + rest_of_data;
+    std::vector<char> file_contents(data_start, file_buffer.end());
 }
 
 std::string PePatch::CreateEntryPointSubroutine(uint32_t original_entry_point) {
@@ -97,10 +109,13 @@ std::string PePatch::CreateEntryPointSubroutine(uint32_t original_entry_point) {
             "mov rbp, rsp;"
             "lea rax, [rip];"
             "sub rsp, 8;"
-            "mov [rbp - 4], rax;" // current address
+            // current address
+            "mov [rbp - 4], rax;"
             "mov rdx, fs:[30h];"
-            "mov [rbp - 8], rdx;" // peb
-            "mov rcx, [rdx + 12];"; // 12 bytes into the peb and we get loader_data
+            // peb
+            "mov [rbp - 8], rdx;"
+            // 12 bytes into the peb and we get loader_data
+            "mov rcx, [rdx + 12];";
 }
 
 std::vector<char> PePatch::Assemble(const std::string &assembly) {
