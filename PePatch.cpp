@@ -9,11 +9,11 @@ const static uint32_t SECTION_CHARACTERISTICS =
         IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
         IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
 
-uint32_t Align(uint32_t num, uint32_t multiple) {
+static uint32_t Align(uint32_t num, uint32_t multiple) {
     return ((num + multiple - 1) / multiple) * multiple;
 }
 
-bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
+static bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
     for (size_t i = 0; i < code_buffer.size(); i++) {
         // First byte
         if (code_buffer[i] != (target_dword & 0xFF)) {
