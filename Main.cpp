@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "PePatch.hpp"
+#include "PeAssembly.hpp"
 
 // https://github.com/brofield/simpleopt
 // MIT license
@@ -79,12 +80,15 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    section = ".code";
+    if (section.empty()) {
+        section = ".code";
+    }
 
     try {
-        PePatch patcher(target_file);
-        auto instructions = patcher.CreateEntryPointCode();
-        auto machine_code = patcher.Assemble(instructions);
+        PeEpIntercept::PePatch patcher(target_file);
+        auto oep = patcher.GetOriginalEntryPoint();
+        auto instruct = PeEpIntercept::EntryRedirectAssemblyX64(oep);
+        auto machine_code = patcher.Assemble(instruct);
         auto code_size = static_cast<uint32_t>(machine_code.size());
 
         if (patcher.HasSection(section)) {
