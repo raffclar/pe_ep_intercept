@@ -107,15 +107,36 @@ std::string PePatch::CreateEntryPointCode(uint32_t original_entry_point) {
 
     return "push rbp;"
             "mov rbp, rsp;"
-            "lea rax, [rip];"
-            "sub rsp, 8;"
-            // current address
-            "mov [rbp - 4], rax;"
-            "mov rdx, fs:[30h];"
-            // peb
-            "mov [rbp - 8], rdx;"
-            // 12 bytes into the peb and we get loader_data
-            "mov rcx, [rdx + 12];";
+            "sub rsp, 24;"
+            // Current address
+            //"lea rax, [rip];"
+            "mov [rbp - 8], rax;"
+            // Peb
+            "mov rax, 60h;"
+            "mov rdx, gs:[rax];"
+            "mov [rbp - 16], rdx;"
+            // Ldr
+            "mov rcx, [rdx + 18h];"
+            "mov [rbp - 24], rcx;"
+            // In load order module linked-list
+            "mov rax, [rcx + 10h];"
+            // Entry point
+            "mov rdx, [rax + 38h];"
+            "search:"
+            "cmp rdx, 0;"
+            "je finish;"
+            "mov rcx, [rbp - 8];"
+            // Check if entry point of module matches
+            // our program entry point
+            "cmp rdx, rcx;"
+            "je finish;"
+            // Flink (next module)
+            "mov rax, [rax];"
+            // Next entry point
+            "mov rdx, [rax + 38h];"
+            "jmp search;"
+            "finish:"
+            "ret;";
 }
 
 std::vector<char> PePatch::Assemble(const std::string &assembly) {
