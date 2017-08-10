@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include "PePatch.hpp"
-#include "PeAssembly.hpp"
 
 // https://github.com/brofield/simpleopt
 // MIT license
@@ -38,7 +37,7 @@ int main(int argc, char *argv[]) {
     CSimpleOpt args(argc, argv, g_rgOptions, SO_O_EXACT);
 
     std::string section;
-    std::string target_file;
+    std::string path;
     _ESOError eso_state = SO_SUCCESS;
 
     while (args.Next() && eso_state == SO_SUCCESS) {
@@ -50,7 +49,7 @@ int main(int argc, char *argv[]) {
                     PrintUsage();
                     return 0;
                 case OPT_PATH:
-                    target_file = args.OptionArg();
+                    path = args.OptionArg();
                     break;
                 case OPT_SECT:
                     section = args.OptionArg();
@@ -74,7 +73,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (target_file.empty()) {
+    if (path.empty()) {
         std::cout << "Error: path cannot be empty." << std::endl;
         PrintUsage();
         return 1;
@@ -85,7 +84,7 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-        PeEpIntercept::PePatch patcher(target_file);
+        PeEpIntercept::PePatch patcher(path);
         auto oep = patcher.GetOriginalEntryPoint();
         auto instruct = PeEpIntercept::EntryRedirectAssemblyX64(oep);
         auto machine_code = patcher.Assemble(instruct);
