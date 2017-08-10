@@ -260,4 +260,4 @@ namespace PeEpIntercept {
     PeArch PePatch::GetPeArch() {
         return type;
     }
-}
+} // namespace PeEpIntercept
