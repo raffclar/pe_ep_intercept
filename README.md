@@ -1,9 +1,9 @@
 # pe_ep_intercept
 
 Creates a new section. Entry point is modified with new section's virtual address. A new entry point is assembled
-with the original entry point (oep) using Keystone. Consideration is given with address space layout randomisation (ASLR).
+with the original entry point (oep) using Keystone. Consideration is given with address space layout randomisation (ASLR) for base address.
 
-Two approaches for ASLR:
+Two approaches for ASLR base address:
 1. Use peb (`fs[30h]` or `gs[60h]`) -> ldr -> base address + oep. [Based on this post][1].
 2. Add new entries to relocation table.
 
