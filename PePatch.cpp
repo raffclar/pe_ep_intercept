@@ -103,9 +103,9 @@ PePatch::PePatch(std::string path) : path(path) {
 }
 
 std::string PePatch::CreateEntryPointCode() {
-    std::string address;
-    address.resize(9);
-    snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
+    std::string address = std::to_string(original_entry_point);
+    //address.resize(9);
+    //snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
 
     return "push rbp;"
             "mov rbp, rsp;"
@@ -139,9 +139,9 @@ std::string PePatch::CreateEntryPointCode() {
             "jmp search;"
             "found:"
             // Image base
-            "mov rdx, [rax + 30h]"
-            "and rdx, FFFFFFFF00000000h;"
-            "or rdx, " + address + ";"
+            "mov rdx, [rax + 30h];"
+            "mov rax, "  + address +  ";"
+            "add rdx, rax;"
             "jmp rdx;"
             "finish:"
             "ret;";
