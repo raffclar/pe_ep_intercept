@@ -16,6 +16,7 @@ private:
     std::fstream file_input;
     std::vector<char> file_buffer;
 
+    uint32_t original_entry_point;
     uint32_t nt_header_signature;
     IMAGE_DOS_HEADER dos_header;
     IMAGE_FILE_HEADER file_header;
@@ -23,7 +24,7 @@ private:
     std::vector<IMAGE_SECTION_HEADER> section_headers;
 public:
     explicit PePatch(std::string path);
-    std::string CreateEntryPointCode(uint32_t original_entry_point);
+    std::string CreateEntryPointCode();
     std::vector<char> Assemble(const std::string &assembly);
     bool HasSection(const std::string &section_name);
     void AddSection(const std::string &new_section_name, uint32_t code_size);

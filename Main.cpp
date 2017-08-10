@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     try {
         PePatch patcher(target_file);
-        auto instructions = patcher.CreateEntryPointCode(100);
+        auto instructions = patcher.CreateEntryPointCode();
         auto machine_code = patcher.Assemble(instructions);
         auto code_size = static_cast<uint32_t>(machine_code.size());
 
