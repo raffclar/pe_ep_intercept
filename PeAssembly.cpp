@@ -44,6 +44,8 @@ namespace PeEpIntercept {
                        "add rdx, rax;"
                        "jmp rdx;"
                        "finish:"
+                        // This will crash until we
+                        // patch in ExitProcess
                        "ret;";
     }
 
