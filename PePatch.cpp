@@ -81,8 +81,10 @@ PePatch::PePatch(std::string path) : path(path) {
     auto nt_header = (PIMAGE_NT_HEADERS) &raw_buffer[dos_header.e_lfanew];
     file_header = *(PIMAGE_FILE_HEADER) &nt_header->FileHeader;
     optional_header = *(PIMAGE_OPTIONAL_HEADER) &nt_header->OptionalHeader;
-    nt_header_signature = nt_header->Signature;
     uint32_t first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS);
+
+    nt_header_signature = nt_header->Signature;
+    original_entry_point = optional_header.AddressOfEntryPoint;
 
     for (uint32_t i = 0; i < file_header.NumberOfSections; i++) {
         uint32_t section_index = i * sizeof(IMAGE_SECTION_HEADER);
@@ -100,7 +102,7 @@ PePatch::PePatch(std::string path) : path(path) {
     this->file_buffer.assign(data_start, file_buffer.end());
 }
 
-std::string PePatch::CreateEntryPointCode(uint32_t original_entry_point) {
+std::string PePatch::CreateEntryPointCode() {
     std::string address;
     address.resize(9);
     snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
@@ -129,12 +131,18 @@ std::string PePatch::CreateEntryPointCode(uint32_t original_entry_point) {
             // Check if entry point of module matches
             // our program entry point
             "cmp rdx, rcx;"
-            "je finish;"
+            "je found;"
             // Flink (next module)
             "mov rax, [rax];"
             // Next entry point
             "mov rdx, [rax + 38h];"
             "jmp search;"
+            "found:"
+            // Image base
+            "mov rdx, [rax + 30h]"
+            "and rdx, FFFFFFFF00000000h;"
+            "or rdx, " + address + ";"
+            "jmp rdx;"
             "finish:"
             "ret;";
 }
