@@ -8,11 +8,11 @@
 #include <string>
 
 namespace PeEpIntercept {
-    typedef enum class {
+    enum class PeArch {
         x86,
         x64,
         unknown
-    } PeArch;
+    };
 
     std::string EntryRedirectAssemblyX64(uint32_t oep);
 
