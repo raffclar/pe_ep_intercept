@@ -104,8 +104,6 @@ PePatch::PePatch(std::string path) : path(path) {
 
 std::string PePatch::CreateEntryPointCode() {
     std::string address = std::to_string(original_entry_point);
-    //address.resize(9);
-    //snprintf(&address[0], 9, "%08" PRIx32, original_entry_point);
 
     return "push rbp;"
             "mov rbp, rsp;"
