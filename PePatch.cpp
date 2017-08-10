@@ -143,7 +143,20 @@ namespace PeEpIntercept {
             ks_close(ks_ptr);
         };
 
-        if (ks_open(KS_ARCH_X86, KS_MODE_64, &ks) != KS_ERR_OK) {
+        ks_mode instruct_mode;
+
+        switch (type) {
+            case PeArch::x86:
+                instruct_mode = KS_MODE_32;
+                break;
+            case PeArch::x64:
+                instruct_mode = KS_MODE_64;
+                break;
+            default:
+                throw std::runtime_error("executable type not supported");
+        }
+
+        if (ks_open(KS_ARCH_X86, instruct_mode, &ks) != KS_ERR_OK) {
             throw std::runtime_error("failed to open keystone");
         }
 
