@@ -20,7 +20,7 @@ namespace PeEpIntercept {
                        // Ldr
                        "mov rcx, [rdx + 18h];"
                        "mov [rbp - 24], rcx;"
-                       // In load order module linked-list
+                       // In memory order module linked-list
                        "mov rax, [rcx + 10h];"
                        // Entry point
                        "mov rdx, [rax + 38h];"
@@ -50,6 +50,43 @@ namespace PeEpIntercept {
     }
 
     std::string EntryRedirectAssemblyX86(uint32_t oep) {
-        return "";
+        return "push ebp;"
+                       "mov ebp, esp;"
+                       "sub esp, 12;"
+                       "sub [ebp - 4], eax;"
+                       // Peb
+                       "mov eax, 30h;"
+                       "mov edx, fs:[eax];"
+                       "mov [ebp - 8], edx;"
+                       // Ldr
+                       "mov ecx, [edx + 12h];"
+                       "mov [ebp - 12], ecx;"
+                       // In memory order module linked-list
+                       "mov eax, [ecx + 08h];"
+                       // Entry point
+                       "mov edx, [eax + 1ch];"
+                       "search:"
+                       "cmp edx, 0;"
+                       "je finish;"
+                       "mov ecx, [ebp - 4];"
+                       // Check if entry point of module matches
+                       // our program entry point
+                       "cmp edx, ecx;"
+                       "je found;"
+                       // Flink (next module)
+                       "mov eax, [eax];"
+                       // Next entry point
+                       "mov edx, [eax + 1ch];"
+                       "jmp search;"
+                       "found:"
+                       // Image base
+                       "mov edx, [eax + 18h];"
+                       "mov eax, " + address + ";"
+                       "add edx, eax;"
+                       "jmp edx;"
+                       "finish:"
+                       // This will crash until we
+                       // patch in ExitProcess
+                       "ret;";
     }
-}
+} // namespace PeEpIntercept
