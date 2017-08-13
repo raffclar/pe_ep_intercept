@@ -50,6 +50,8 @@ namespace PeEpIntercept {
     }
 
     std::string EntryRedirectAssemblyX86(uint32_t oep) {
+        std::string address = std::to_string(oep);
+        
         return "push ebp;"
                        "mov ebp, esp;"
                        "sub esp, 12;"
