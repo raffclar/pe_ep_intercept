@@ -88,15 +88,10 @@ namespace PeEpIntercept {
             throw std::runtime_error("could not executable read headers");
         }
 
-        auto nt_header = (PIMAGE_NT_HEADERS) &raw_buffer[dos_header.e_lfanew];
-        file_header = *(PIMAGE_FILE_HEADER) &nt_header->FileHeader;
-        optional_header = *(PIMAGE_OPTIONAL_HEADER) &nt_header->OptionalHeader;
-        uint32_t first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS);
+        size_t machine_offset = dos_header.e_lfanew + sizeof(uint32_t);
+        auto machine = static_cast<uint16_t>((raw_buffer[machine_offset + 1] << 8) + raw_buffer[machine_offset]);
 
-        nt_header_signature = nt_header->Signature;
-        original_entry_point = optional_header.AddressOfEntryPoint;
-
-        switch (file_header.Machine) {
+        switch (machine) {
             case 0x014c:
                 type = PeArch::x86;
                 break;
@@ -106,6 +101,19 @@ namespace PeEpIntercept {
             default:
                 throw std::runtime_error("executable type is not x86 or x64");
         }
+
+        auto nt_header = (PIMAGE_NT_HEADERS) &raw_buffer[dos_header.e_lfanew];
+        file_header = *(PIMAGE_FILE_HEADER) &nt_header->FileHeader;
+        optional_header = *(PIMAGE_OPTIONAL_HEADER) &nt_header->OptionalHeader;
+        uint32_t first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS);
+
+        nt_header_signature = nt_header->Signature;
+
+        if (nt_header_signature != 0x4550) {
+            throw std::runtime_error("This is not a portable executable");
+        }
+
+        original_entry_point = optional_header.AddressOfEntryPoint;
 
         for (uint32_t i = 0; i < file_header.NumberOfSections; i++) {
             uint32_t section_index = i * sizeof(IMAGE_SECTION_HEADER);
