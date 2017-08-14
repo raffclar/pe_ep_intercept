@@ -85,8 +85,21 @@ int main(int argc, char *argv[]) {
 
     try {
         PeEpIntercept::PePatch patcher(path);
+        std::string instruct;
         auto oep = patcher.GetOriginalEntryPoint();
-        auto instruct = PeEpIntercept::EntryRedirectAssemblyX64(oep);
+
+        switch (patcher.GetPeArch()) {
+            case PeEpIntercept::PeArch::x64:
+                PeEpIntercept::EntryRedirectAssemblyX64(oep);
+                break;
+            case PeEpIntercept::PeArch::x86:
+                PeEpIntercept::EntryRedirectAssemblyX86(oep);
+                break;
+            case PeEpIntercept::PeArch::unknown:
+                std::cout << "Unsupported architecture." << std::endl;
+                return 1;
+        }
+
         auto machine_code = patcher.Assemble(instruct);
         auto code_size = static_cast<uint32_t>(machine_code.size());
 
