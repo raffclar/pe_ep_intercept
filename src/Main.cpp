@@ -6,6 +6,8 @@
 // https://github.com/brofield/simpleopt
 // MIT license
 #include "utils/SimpleOpt.h"
+#include "PePatchX64.hpp"
+#include "PePatchX86.hpp"
 
 enum {
     OPT_HELP, OPT_PATH, OPT_SECT
@@ -84,15 +86,21 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-        PeEpIntercept::PePatch patcher(path);
-        std::string instruct;
-        auto oep = patcher.GetOriginalEntryPoint();
+        PeEpIntercept::PeArch arch = PeEpIntercept::PePatch::GetPeArch(path);
+        std::unique_ptr<PeEpIntercept::PePatch> patcher;
 
-        switch (patcher.GetPeArch()) {
+        std::string instruct;
+        uint32_t oep = 0;
+
+        switch (arch) {
             case PeEpIntercept::PeArch::x64:
+                patcher.reset(new PeEpIntercept::PePatchX64(path));
+                oep = patcher->GetOriginalEntryPoint();
                 PeEpIntercept::EntryRedirectAssemblyX64(oep);
                 break;
             case PeEpIntercept::PeArch::x86:
+                patcher.reset(new PeEpIntercept::PePatchX86(path));
+                oep = patcher->GetOriginalEntryPoint();
                 PeEpIntercept::EntryRedirectAssemblyX86(oep);
                 break;
             case PeEpIntercept::PeArch::unknown:
@@ -100,16 +108,16 @@ int main(int argc, char *argv[]) {
                 return 1;
         }
 
-        auto machine_code = patcher.Assemble(instruct);
+        auto machine_code = patcher->Assemble(instruct);
         auto code_size = static_cast<uint32_t>(machine_code.size());
 
-        if (patcher.HasSection(section)) {
+        if (patcher->HasSection(section)) {
             std::cout << "Has section \"" << section << "\"." << std::endl;
         } else {
-            patcher.AddSection(section, code_size);
+            patcher->AddSection(section, code_size);
         }
 
-        patcher.SaveFile("a2.exe", machine_code);
+        patcher->SaveFile("a2.exe", machine_code);
     } catch (std::runtime_error &err) {
         std::cout << err.what() << std::endl;
         return 1;
