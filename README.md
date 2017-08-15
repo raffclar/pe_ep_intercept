@@ -3,11 +3,11 @@
 
 Writes a new entry point for a target executable using Keystone as the assembler.
 
-###Table of Contents
+### Table of Contents
 * **[Details](#Details)**
 * **[How to compile](#How to compile)**
 
-###Details
+### Details
 
 Creates a new section marked as executable. The program's entry point is modified with the new section's virtual address. A new entry point is assembled
 with the original entry point (oep) using Keystone. Consideration is given with address space layout randomisation (ASLR) for the base address.
@@ -18,7 +18,7 @@ Two approaches for ASLR base address:
 
 The newly added section's code jumps to the original oep allowing normal execution of the program.
 
-###How to compile
+### How to compile
 
 1. Ensure that you have Cmake installed.
 2. Execute `run_build.sh`.
