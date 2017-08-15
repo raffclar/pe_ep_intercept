@@ -1,3 +1,5 @@
 file(GLOB SOURCE_FILES *.hpp *.cpp)
 add_executable(pe_ep_intercept ${SOURCE_FILES})
+set_property(TARGET pe_ep_intercept PROPERTY CXX_STANDARD 11)
+set_property(TARGET pe_ep_intercept PROPERTY CXX_STANDARD_REQUIRED OFF)
 target_link_libraries(pe_ep_intercept keystone)
