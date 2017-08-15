@@ -29,9 +29,10 @@ namespace PeEpIntercept {
         IMAGE_FILE_HEADER file_header;
         IMAGE_OPTIONAL_HEADER optional_header;
         std::vector<IMAGE_SECTION_HEADER> section_headers;
-    public:
+    protected:
         explicit PePatch(std::string path);
 
+    public:
         std::vector<char> Assemble(const std::string &assembly);
 
         bool HasSection(const std::string &section_name);
