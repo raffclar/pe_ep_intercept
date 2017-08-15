@@ -92,7 +92,7 @@ namespace PeEpIntercept {
         uint32_t SizeOfHeapCommit;
         uint32_t LoaderFlags;
         uint32_t NumberOfRvaAndSizes;
-        DataDirectory DataDirectory[directory_count];
+        DataDirectory dataDirectory[directory_count];
     } OptionalHeaderX86, *OptionalHeaderX86Ptr;
 
     typedef struct {
@@ -126,7 +126,7 @@ namespace PeEpIntercept {
         uint64_t SizeOfHeapCommit;
         uint32_t LoaderFlags;
         uint32_t NumberOfRvaAndSizes;
-        DataDirectory DataDirectory[directory_count];
+        DataDirectory dataDirectory[directory_count];
     } OptionalHeaderX64, *OptionalHeaderX64Ptr;
 
     typedef struct {
