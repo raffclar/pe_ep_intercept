@@ -2,65 +2,21 @@
 // Created by gavxn on 15/08/2017.
 //
 
+#include <cstring>
 #include "PePatchX64.hpp"
+#include "PeStructs.hpp"
 
 namespace PeEpIntercept {
-    PePatch::PePatch(std::string path) : path(path) {
-        file_input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        file_input.open(path, std::ios::binary |
-                              std::ifstream::ate |
-                              std::fstream::in |
-                              std::fstream::out);
-        std::streamsize size = file_input.tellg();
-        file_input.seekg(0, std::ios::beg);
-
-        if (size <= 0) {
-            throw std::runtime_error("could not get file size");
-        }
-
-        std::vector<char> file_buffer((uint32_t) size);
-
-        if (!file_input.read(file_buffer.data(), size)) {
-            throw std::runtime_error("could not read file");
-        }
-
+    PePatchX64::PePatchX64(std::string &path) : PePatch(path) {
         const auto *raw_buffer = file_buffer.data();
-
-        // Portable Executable headers
-        dos_header = *(PIMAGE_DOS_HEADER) raw_buffer;
-
-        if (dos_header.e_magic != 0x5a4d) {
-            throw std::runtime_error("could not executable read headers");
-        }
-
-        size_t machine_offset = dos_header.e_lfanew + sizeof(uint32_t);
-        auto machine = static_cast<uint16_t>((raw_buffer[machine_offset + 1] << 8) + raw_buffer[machine_offset]);
-
-        switch (machine) {
-            case 0x014c:
-                type = PeArch::x86;
-                break;
-            case 0x8664:
-                type = PeArch::x64;
-                break;
-            default:
-                throw std::runtime_error("executable type is not x86 or x64");
-        }
-
         uint32_t first_section = 0;
 
-        if (type == PeArch::x86) {
-            auto nt_header = (PIMAGE_NT_HEADERS32) &raw_buffer[dos_header.e_lfanew];
-            file_header = *(PIMAGE_FILE_HEADER) &nt_header->FileHeader;
-            first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS32);
-            nt_header_signature = nt_header->Signature;
-            //optional_header = *(PIMAGE_OPTIONAL_HEADER32) &nt_header->OptionalHeader;
-        } else if (type == PeArch::x64) {
-            auto nt_header = (PIMAGE_NT_HEADERS64) &raw_buffer[dos_header.e_lfanew];
-            file_header = *(PIMAGE_FILE_HEADER) &nt_header->FileHeader;
-            first_section = dos_header.e_lfanew + sizeof(IMAGE_NT_HEADERS64);
-            nt_header_signature = nt_header->Signature;
-            optional_header = *(PIMAGE_OPTIONAL_HEADER64) &nt_header->OptionalHeader;
+        if (type == PeArch::x64) {
+            auto nt_header = (NtHeaderX64Ptr) &raw_buffer[dos_header.e_lfanew];
+            file_header = *(CoffHeaderPtr) &nt_header->coff;
+            first_section = dos_header.e_lfanew + sizeof(NtHeaderX64);
+            nt_header_signature = nt_header->signature;
+            optional_header = *(OptionalHeaderX64Ptr) &nt_header->optional;
         }
 
         if (nt_header_signature != 0x4550) {
@@ -70,18 +26,92 @@ namespace PeEpIntercept {
         original_entry_point = optional_header.AddressOfEntryPoint;
 
         for (uint32_t i = 0; i < file_header.NumberOfSections; i++) {
-            uint32_t section_index = i * sizeof(IMAGE_SECTION_HEADER);
+            uint32_t section_index = i * sizeof(SectionHeader);
             uint32_t next_section = first_section + section_index;
-            auto hdr = *(PIMAGE_SECTION_HEADER) &raw_buffer[next_section];
+            auto hdr = *(SectionHeaderPtr) &raw_buffer[next_section];
             section_headers.push_back(hdr);
         }
 
         auto rest_of_data = first_section;
         auto count = static_cast<uint32_t>(section_headers.size());
-        rest_of_data += count * sizeof(IMAGE_SECTION_HEADER);
+        rest_of_data += count * sizeof(SectionHeader);
 
         // Excludes headers since we already have the initialised structs
         auto data_start = file_buffer.begin() + rest_of_data;
         this->file_buffer.assign(data_start, file_buffer.end());
+    }
+
+    void PePatchX64::AddSection(const std::string &name, uint32_t code_size) {
+        auto last_section = section_headers.back();
+        auto aligned_size = Align(code_size, optional_header.FileAlignment);
+        SectionHeader new_section{};
+
+        new_section.Characteristics = characteristics;
+        new_section.SizeOfRawData = aligned_size;
+        new_section.Misc.VirtualSize = Align(
+                aligned_size,
+                optional_header.SectionAlignment);
+        new_section.PointerToRawData = Align(
+                last_section.SizeOfRawData + last_section.PointerToRawData,
+                optional_header.FileAlignment);
+        new_section.VirtualAddress = Align(
+                last_section.Misc.VirtualSize + last_section.VirtualAddress,
+                optional_header.SectionAlignment);
+
+        for (size_t i = 0; i < section_name_size; i++) {
+            char letter;
+
+            if (i < name.length()) {
+                letter = name.at(i);
+            } else {
+                letter = '\0';
+            }
+
+            new_section.Name[i] = static_cast<uint8_t>(letter);
+        }
+
+        file_header.NumberOfSections++;
+        optional_header.AddressOfEntryPoint = new_section.VirtualAddress;
+        optional_header.SizeOfImage =
+                new_section.VirtualAddress + new_section.Misc.VirtualSize;
+        section_headers.push_back(new_section);
+    }
+
+    void PePatchX64::SaveFile(std::string new_path, std::vector<char> code_buffer) {
+        char dos_bytes[sizeof(dos_header)];
+        memcpy(dos_bytes, &dos_header, sizeof(dos_header));
+        file_input.seekg(0);
+        file_input.write(dos_bytes, sizeof(dos_header));
+
+        NtHeaderX64 nt_headers{
+                nt_header_signature,
+                file_header,
+                optional_header};
+
+        char nt_bytes[sizeof(nt_headers)];
+        memcpy(nt_bytes, &nt_headers, sizeof(nt_headers));
+        file_input.seekg(dos_header.e_lfanew, std::ios_base::beg);
+        file_input.write(nt_bytes, sizeof(nt_headers));
+        uint32_t address = dos_header.e_lfanew + sizeof(nt_headers);
+
+        for (auto &section_header : section_headers) {
+            char hdr_bytes[sizeof(section_header)];
+            memcpy(hdr_bytes, &section_header, sizeof(section_header));
+            file_input.seekg(address);
+            file_input.write(hdr_bytes, sizeof(section_header));
+            address += sizeof(section_header);
+        }
+
+        auto new_section = &section_headers.back();
+        uint32_t code_position = new_section->PointerToRawData;
+        file_input.seekg(code_position);
+
+        // Padding might be required otherwise the loader will fail
+        // when loading the executable
+        while (code_buffer.size() < new_section->SizeOfRawData) {
+            code_buffer.push_back(0);
+        }
+
+        file_input.write(code_buffer.data(), code_buffer.size());
     }
 }
