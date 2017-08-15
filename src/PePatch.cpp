@@ -7,10 +7,6 @@
 #include <vector>
 #include <memory>
 
-static const uint32_t SECTION_CHARACTERISTICS =
-        IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
-        IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
-
 static bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
     for (size_t i = 0; i < code_buffer.size(); i++) {
         // First byte
@@ -58,7 +54,7 @@ namespace PeEpIntercept {
             throw std::runtime_error("could not get file size");
         }
 
-        std::vector<char> file_buffer((uint32_t) size);
+        file_buffer.resize((uint32_t) size);
 
         if (!file_input.read(file_buffer.data(), size)) {
             throw std::runtime_error("could not read file");
@@ -147,6 +143,14 @@ namespace PeEpIntercept {
         }
 
         return instructions;
+    }
+
+    void PePatch::AddSection(const std::string &name, uint32_t code_size) {
+
+    }
+
+    void PePatch::SaveFile(std::string new_path, std::vector<char> code_buffer) {
+
     }
 
     bool PePatch::HasSection(const std::string &section_name) {

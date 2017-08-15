@@ -30,16 +30,18 @@ namespace PeEpIntercept {
         CoffHeader file_header;
         std::vector<SectionHeader> section_headers;
 
+        static const uint32_t characteristics = scn_code | scn_mem_exe | scn_mem_read | scn_mem_write;
+
         explicit PePatch(std::string path);
 
     public:
         std::vector<char> Assemble(const std::string &assembly);
 
+        virtual void AddSection(const std::string &name, uint32_t code_size);
+
+        virtual void SaveFile(std::string new_path, std::vector<char> code_buffer);
+
         bool HasSection(const std::string &section_name);
-
-        virtual void AddSection(const std::string &name, uint32_t code_size) = 0;
-
-        virtual void SaveFile(std::string new_path, std::vector<char> code_buffer) = 0;
 
         uint32_t GetOriginalEntryPoint();
 
