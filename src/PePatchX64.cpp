@@ -78,6 +78,10 @@ namespace PeEpIntercept {
     }
 
     void PePatchX64::SaveFile(std::string new_path, std::vector<char> code_buffer) {
+        if(code_buffer.empty()) {
+            throw std::runtime_error("Unable to write empty code section");
+        }
+
         char dos_bytes[sizeof(dos_header)];
         memcpy(dos_bytes, &dos_header, sizeof(dos_header));
         file_input.seekg(0);

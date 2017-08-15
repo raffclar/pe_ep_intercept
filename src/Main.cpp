@@ -96,12 +96,12 @@ int main(int argc, char *argv[]) {
             case PeEpIntercept::PeArch::x64:
                 patcher.reset(new PeEpIntercept::PePatchX64(path));
                 oep = patcher->GetOriginalEntryPoint();
-                PeEpIntercept::EntryRedirectAssemblyX64(oep);
+                instruct = PeEpIntercept::EntryRedirectAssemblyX64(oep);
                 break;
             case PeEpIntercept::PeArch::x86:
                 patcher.reset(new PeEpIntercept::PePatchX86(path));
                 oep = patcher->GetOriginalEntryPoint();
-                PeEpIntercept::EntryRedirectAssemblyX86(oep);
+                instruct = PeEpIntercept::EntryRedirectAssemblyX86(oep);
                 break;
             case PeEpIntercept::PeArch::unknown:
                 std::cout << "Unsupported architecture." << std::endl;
