@@ -6,18 +6,19 @@
 #include <vector>
 #include <fstream>
 
-#include "windows.h"
-#include <imagehlp.h>
+//#include "windows.h"
+//#include <imagehlp.h>
 
 // http://www.ntinternals.net
 // Tomasz Nowak, 2000-2015.
-#include "ntundoc.h"
+//#include "ntundoc.h"
 
 #include "PeAssembly.hpp"
+#include "PeStructs.hpp"
 
 namespace PeEpIntercept {
     class PePatch {
-    private:
+    protected:
         PeArch type = PeArch::unknown;
         std::string path;
         std::fstream file_input;
@@ -25,11 +26,10 @@ namespace PeEpIntercept {
 
         uint32_t original_entry_point;
         uint32_t nt_header_signature;
-        IMAGE_DOS_HEADER dos_header;
-        IMAGE_FILE_HEADER file_header;
-        IMAGE_OPTIONAL_HEADER optional_header;
-        std::vector<IMAGE_SECTION_HEADER> section_headers;
-    protected:
+        DosHeader dos_header;
+        CoffHeader file_header;
+        std::vector<SectionHeader> section_headers;
+
         explicit PePatch(std::string path);
 
     public:
@@ -37,13 +37,15 @@ namespace PeEpIntercept {
 
         bool HasSection(const std::string &section_name);
 
-        void AddSection(const std::string &name, uint32_t code_size);
+        virtual void AddSection(const std::string &name, uint32_t code_size);
 
-        void SaveFile(std::string new_path, std::vector<char> code_buffer);
+        virtual void SaveFile(std::string new_path, std::vector<char> code_buffer);
 
         uint32_t GetOriginalEntryPoint();
 
         PeArch GetPeArch();
+
+        static PeArch GetPeArch(std::string &path);
     };
 }
 
