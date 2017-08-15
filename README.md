@@ -5,7 +5,7 @@ Writes a new entry point for a target executable using Keystone as the assembler
 
 ### Table of Contents
 * **[Details](#Details)**
-* **[How to compile](#How to compile)**
+* **[How to compile](#How-to-compile)**
 
 ### Details
 
