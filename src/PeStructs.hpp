@@ -6,6 +6,11 @@
 #define PE_EP_INTERCEPT_PESTRUCTS_HPP
 
 namespace PeEpIntercept {
+    const uint32_t scn_code = 0x00000020;
+    const uint32_t scn_mem_exe = 0x20000000;
+    const uint32_t scn_mem_read = 0x40000000;
+    const uint32_t scn_mem_write = 0x80000000;
+
     const int directory_count = 16;
     const int section_name_size = 8;
 
@@ -53,7 +58,7 @@ namespace PeEpIntercept {
     typedef struct {
         uint32_t VirtualAddress;
         uint32_t Size;
-    } data_directory, *data_directory_ptr;
+    } DataDirectory, *DataDirectoryPtr;
 
     typedef struct {
         uint16_t Magic;
@@ -98,10 +103,9 @@ namespace PeEpIntercept {
         uint32_t SizeOfInitializedData;
         uint32_t SizeOfUninitializedData;
         uint32_t AddressOfEntryPoint;
-        uint32_t BaseOfCode;
         // Extensions
-        uint32_t BaseOfData;
-        uint32_t ImageBase;
+        uint32_t BaseOfCode;
+        uint64_t ImageBase;
         uint32_t SectionAlignment;
         uint32_t FileAlignment;
         uint16_t MajorOperatingSystemVersion;
@@ -116,10 +120,10 @@ namespace PeEpIntercept {
         uint32_t CheckSum;
         uint16_t Subsystem;
         uint16_t DllCharacteristics;
-        uint32_t SizeOfStackReserve;
-        uint32_t SizeOfStackCommit;
-        uint32_t SizeOfHeapReserve;
-        uint32_t SizeOfHeapCommit;
+        uint64_t SizeOfStackReserve;
+        uint64_t SizeOfStackCommit;
+        uint64_t SizeOfHeapReserve;
+        uint64_t SizeOfHeapCommit;
         uint32_t LoaderFlags;
         uint32_t NumberOfRvaAndSizes;
         data_directory DataDirectory[directory_count];
