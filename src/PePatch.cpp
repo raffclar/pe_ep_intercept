@@ -1,20 +1,15 @@
 #include "PePatch.hpp"
 #include <keystone/keystone.h>
 #include <cinttypes>
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
 
-static const uint32_t SECTION_MAX_NAME_SIZE = IMAGE_SIZEOF_SHORT_NAME;
-
 static const uint32_t SECTION_CHARACTERISTICS =
         IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ |
         IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
-
-static uint32_t Align(uint32_t num, uint32_t multiple) {
-    return ((num + multiple - 1) / multiple) * multiple;
-}
 
 static bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
     for (size_t i = 0; i < code_buffer.size(); i++) {
@@ -49,17 +44,52 @@ static bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, u
     return false;
 }
 
-static std::vector<char> CopyBytes(char *byte_start, char *byte_end) {
-    if (byte_start >= byte_end) {
-        throw std::runtime_error("pointer is greater or equal than ending pointer");
+namespace PeEpIntercept {
+    PePatch::PePatch(std::string path) {
+        file_input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        file_input.open(path, std::ios::binary |
+                              std::ifstream::ate |
+                              std::fstream::in |
+                              std::fstream::out);
+        std::streamsize size = file_input.tellg();
+        file_input.seekg(0, std::ios::beg);
+
+        if (size <= 0) {
+            throw std::runtime_error("could not get file size");
+        }
+
+        std::vector<char> file_buffer((uint32_t) size);
+
+        if (!file_input.read(file_buffer.data(), size)) {
+            throw std::runtime_error("could not read file");
+        }
+
+        const auto *raw_buffer = file_buffer.data();
+        dos_header = *(DosHeaderPtr) raw_buffer;
+
+        if (dos_header.e_magic[0] != 'M' || dos_header.e_magic[1] != 'Z') {
+            throw std::runtime_error("could not executable read headers");
+        }
+
+        size_t machine_offset = dos_header.e_lfanew + sizeof(uint32_t);
+        auto machine = static_cast<uint16_t>((raw_buffer[machine_offset + 1] << 8) + raw_buffer[machine_offset]);
+
+        switch (machine) {
+            case 0x014c:
+                type = PeArch::x86;
+                break;
+            case 0x8664:
+                type = PeArch::x64;
+                break;
+            default:
+                throw std::runtime_error("executable type is not x86 or x64");
+        }
+
+        nt_header_signature = 0;
+        original_entry_point = 0;
+        file_header = {};
     }
 
-    std::vector<char> subroutine_buffer(byte_start, byte_end);
-    return subroutine_buffer;
-}
-
-
-namespace PeEpIntercept {
     std::vector<char> PePatch::Assemble(const std::string &assembly) {
         std::vector<char> instructions;
 
@@ -129,85 +159,20 @@ namespace PeEpIntercept {
         return false;
     }
 
-    void PePatch::AddSection(const std::string &name, uint32_t code_size) {
-        auto last_section = section_headers.back();
-        auto aligned_size = Align(code_size, optional_header.FileAlignment);
-        IMAGE_SECTION_HEADER new_section{};
-
-        new_section.Characteristics = SECTION_CHARACTERISTICS;
-        new_section.SizeOfRawData = aligned_size;
-        new_section.Misc.VirtualSize = Align(
-                aligned_size,
-                optional_header.SectionAlignment);
-        new_section.PointerToRawData = Align(
-                last_section.SizeOfRawData + last_section.PointerToRawData,
-                optional_header.FileAlignment);
-        new_section.VirtualAddress = Align(
-                last_section.Misc.VirtualSize + last_section.VirtualAddress,
-                optional_header.SectionAlignment);
-
-        for (size_t i = 0; i < SECTION_MAX_NAME_SIZE; i++) {
-            char letter;
-
-            if (i < name.length()) {
-                letter = name.at(i);
-            } else {
-                letter = '\0';
-            }
-
-            new_section.Name[i] = static_cast<uint8_t>(letter);
-        }
-
-        file_header.NumberOfSections++;
-        optional_header.AddressOfEntryPoint = new_section.VirtualAddress;
-        optional_header.SizeOfImage =
-                new_section.VirtualAddress + new_section.Misc.VirtualSize;
-        section_headers.push_back(new_section);
-    }
-
-    void PePatch::SaveFile(std::string new_path, std::vector<char> code_buffer) {
-        char dos_bytes[sizeof(dos_header)];
-        memcpy(dos_bytes, &dos_header, sizeof(dos_header));
-        file_input.seekg(0);
-        file_input.write(dos_bytes, sizeof(dos_header));
-
-        IMAGE_NT_HEADERS nt_headers{
-                nt_header_signature,
-                file_header,
-                optional_header};
-
-        char nt_bytes[sizeof(nt_headers)];
-        memcpy(nt_bytes, &nt_headers, sizeof(nt_headers));
-        file_input.seekg(dos_header.e_lfanew, std::ios_base::beg);
-        file_input.write(nt_bytes, sizeof(nt_headers));
-        uint32_t address = dos_header.e_lfanew + sizeof(nt_headers);
-
-        for (auto &section_header : section_headers) {
-            char hdr_bytes[sizeof(section_header)];
-            memcpy(hdr_bytes, &section_header, sizeof(section_header));
-            file_input.seekg(address);
-            file_input.write(hdr_bytes, sizeof(section_header));
-            address += sizeof(section_header);
-        }
-
-        auto new_section = &section_headers.back();
-        uint32_t code_position = new_section->PointerToRawData;
-        file_input.seekg(code_position);
-
-        // Padding might be required otherwise the loader will fail
-        // when loading the executable
-        while (code_buffer.size() < new_section->SizeOfRawData) {
-            code_buffer.push_back(0);
-        }
-
-        file_input.write(code_buffer.data(), code_buffer.size());
-    }
-
     uint32_t PePatch::GetOriginalEntryPoint() {
         return original_entry_point;
     }
 
     PeArch PePatch::GetPeArch() {
         return type;
+    }
+
+    PeArch PePatch::GetPeArch(std::string &path) {
+        PePatch patcher(path);
+        return patcher.GetPeArch();
+    }
+
+    uint32_t PePatch::Align(uint32_t num, uint32_t multiple) {
+        return ((num + multiple - 1) / multiple) * multiple;
     }
 } // namespace PeEpIntercept

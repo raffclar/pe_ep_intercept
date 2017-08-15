@@ -37,15 +37,17 @@ namespace PeEpIntercept {
 
         bool HasSection(const std::string &section_name);
 
-        virtual void AddSection(const std::string &name, uint32_t code_size);
+        virtual void AddSection(const std::string &name, uint32_t code_size) = 0;
 
-        virtual void SaveFile(std::string new_path, std::vector<char> code_buffer);
+        virtual void SaveFile(std::string new_path, std::vector<char> code_buffer) = 0;
 
         uint32_t GetOriginalEntryPoint();
 
         PeArch GetPeArch();
 
         static PeArch GetPeArch(std::string &path);
+
+        static uint32_t Align(uint32_t num, uint32_t multiple);
     };
 }
 
