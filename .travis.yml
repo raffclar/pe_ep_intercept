@@ -1,0 +1,17 @@
+dist: trusty
+language: cpp
+compiler: gcc
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - cmake
+
+branches:
+  only:
+      - master
+script: ./run_build.sh
+
+
+
