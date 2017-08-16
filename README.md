@@ -4,8 +4,12 @@
 Writes a new entry point for a target executable using Keystone as the assembler.
 
 ### Table of Contents
+* **[Why does this exist](#Why-does-this-exist)**
 * **[Details](#Details)**
 * **[How to compile](#How-to-compile)**
+
+### Why does this exist
+I found it difficult to find a portable executable patcher that handles a random base address and doesn't use inline assembly for the copied instructions. It was also difficult to find a patcher that does not store compiled x86 or x86-64 machine code in the source.
 
 ### Details
 
