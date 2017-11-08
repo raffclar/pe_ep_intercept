@@ -1,5 +1,5 @@
 # pe_ep_intercept
-[![Build Status](https://travis-ci.org/raffclar/pe_ep_intercept.svg?branch=travis-ci)](https://travis-ci.org/raffclar/pe_ep_intercept)
+[![Build Status](https://travis-ci.org/raffclar/pe_ep_intercept.svg?branch=master)](https://travis-ci.org/raffclar/pe_ep_intercept)
 
 Writes a new entry point for a target executable using Keystone as the assembler.
 
