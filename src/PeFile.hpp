@@ -1,5 +1,5 @@
-#ifndef PE_EP_INTERCEPT_PEPATCH_HPP
-#define PE_EP_INTERCEPT_PEPATCH_HPP
+#ifndef PE_EP_INTERCEPT_PEFILE_HPP
+#define PE_EP_INTERCEPT_PEFILE_HPP
 
 #include <string>
 #include <memory>
@@ -57,4 +57,4 @@ namespace PeEpIntercept {
     };
 }
 
-#endif //PE_EP_INTERCEPT_PEPATCH_HPP
+#endif //PE_EP_INTERCEPT_PEFILE_HPP
