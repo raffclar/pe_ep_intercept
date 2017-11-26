@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
     try {
         PeEpIntercept::PeArch arch = PeEpIntercept::PeFile::GetPeArch(path);
-        std::unique_ptr<PeEpIntercept::PeFile> patcher;
+        std::unique_ptr<PeEpIntercept::PePatch> patcher;
 
         std::string instruct;
         uint32_t oep = 0;
