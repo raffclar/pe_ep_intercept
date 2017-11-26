@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
-#include "PePatch.hpp"
+#include "PeFile.hpp"
 
 // https://github.com/brofield/simpleopt
 // MIT license
@@ -86,8 +86,8 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-        PeEpIntercept::PeArch arch = PeEpIntercept::PePatch::GetPeArch(path);
-        std::unique_ptr<PeEpIntercept::PePatch> patcher;
+        PeEpIntercept::PeArch arch = PeEpIntercept::PeFile::GetPeArch(path);
+        std::unique_ptr<PeEpIntercept::PeFile> patcher;
 
         std::string instruct;
         uint32_t oep = 0;

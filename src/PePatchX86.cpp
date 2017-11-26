@@ -5,7 +5,7 @@
 #include "PePatchX86.hpp"
 
 namespace PeEpIntercept {
-    PePatchX86::PePatchX86(std::string &path) : PePatch(path) {
+    PePatchX86::PePatchX86(std::string &path) : PeFile(path) {
         const auto *raw_buffer = file_buffer.data();
         uint32_t first_section = 0;
 

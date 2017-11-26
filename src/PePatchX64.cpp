@@ -7,7 +7,7 @@
 #include "PeStructs.hpp"
 
 namespace PeEpIntercept {
-    PePatchX64::PePatchX64(std::string &path) : PePatch(path) {
+    PePatchX64::PePatchX64(std::string &path) : PeFile(path) {
         const auto *raw_buffer = file_buffer.data();
         uint32_t first_section = 0;
 
