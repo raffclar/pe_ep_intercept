@@ -37,14 +37,6 @@ namespace PeEpIntercept {
     public:
         std::vector<char> Assemble(const std::string &assembly);
 
-        virtual void AddSection(const std::string &name, uint32_t code_size) {
-
-        }
-
-        virtual void SaveFile(std::string new_path, std::vector<char> code_buffer) {
-
-        }
-
         bool HasSection(const std::string &section_name);
 
         uint32_t GetOriginalEntryPoint();
