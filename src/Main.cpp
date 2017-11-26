@@ -94,12 +94,12 @@ int main(int argc, char *argv[]) {
 
         switch (arch) {
             case PeEpIntercept::PeArch::x64:
-                patcher.reset(new PeEpIntercept::PePatchX64(path));
+                patcher = std::make_unique<PeEpIntercept::PePatchX64>(path);
                 oep = patcher->GetOriginalEntryPoint();
                 instruct = PeEpIntercept::EntryRedirectAssemblyX64(oep);
                 break;
             case PeEpIntercept::PeArch::x86:
-                patcher.reset(new PeEpIntercept::PePatchX86(path));
+                patcher = std::make_unique<PeEpIntercept::PePatchX86>(path);
                 oep = patcher->GetOriginalEntryPoint();
                 instruct = PeEpIntercept::EntryRedirectAssemblyX86(oep);
                 break;
