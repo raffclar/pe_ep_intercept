@@ -1,10 +1,10 @@
 #ifndef PE_EP_INTERCEPT_PEPATCHX64_HPP
 #define PE_EP_INTERCEPT_PEPATCHX64_HPP
 
-#include "PePatch.hpp"
+#include "PeFile.hpp"
 
 namespace PeEpIntercept {
-    class PePatchX64 : public PePatch {
+    class PePatchX64 : public PeFile {
     private:
         OptionalHeaderX64 optional_header;
     public:
