@@ -1,10 +1,5 @@
-//
-// Created by gavxn on 15/08/2017.
-//
-
 #include <cstring>
 #include "PePatchX64.hpp"
-#include "PeStructs.hpp"
 
 namespace PeEpIntercept {
     PePatchX64::PePatchX64(std::string &path) : PePatch(path) {
@@ -78,7 +73,7 @@ namespace PeEpIntercept {
     }
 
     void PePatchX64::SaveFile(std::string new_path, std::vector<char> code_buffer) {
-        if(code_buffer.empty()) {
+        if (code_buffer.empty()) {
             throw std::runtime_error("Unable to write empty code section");
         }
 

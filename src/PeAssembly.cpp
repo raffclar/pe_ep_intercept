@@ -1,9 +1,4 @@
-//
-// Created by gavxn on 10/08/2017.
-//
-
 #include "PeAssembly.hpp"
-#include <string>
 
 namespace PeEpIntercept {
     std::string EntryRedirectAssemblyX64(uint32_t oep) {

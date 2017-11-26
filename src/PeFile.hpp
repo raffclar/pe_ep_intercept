@@ -6,13 +6,6 @@
 #include <vector>
 #include <fstream>
 
-//#include "windows.h"
-//#include <imagehlp.h>
-//
-// http://www.ntinternals.net
-// Tomasz Nowak, 2000-2015.
-//#include "ntundoc.h"
-
 #include "PeAssembly.hpp"
 #include "PeStructs.hpp"
 
@@ -48,5 +41,6 @@ namespace PeEpIntercept {
         static uint32_t Align(uint32_t num, uint32_t multiple);
     };
 }
+
 
 #endif //PE_EP_INTERCEPT_PEFILE_HPP

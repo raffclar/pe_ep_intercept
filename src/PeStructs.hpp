@@ -1,7 +1,3 @@
-//
-// Created by gavxn on 30/06/2017.
-//
-
 #ifndef PE_EP_INTERCEPT_PESTRUCTS_HPP
 #define PE_EP_INTERCEPT_PESTRUCTS_HPP
 
@@ -188,5 +184,6 @@ namespace PeEpIntercept {
         int8_t Name[1];
     } ImportByName, *ImportByNamePtr;
 }
+
 
 #endif //PE_EP_INTERCEPT_PESTRUCTS_HPP
