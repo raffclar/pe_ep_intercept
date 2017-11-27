@@ -1,43 +1,6 @@
 #include "PeFile.hpp"
 #include <cinttypes>
-#include <cstring>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <memory>
-
-static bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
-    for (size_t i = 0; i < code_buffer.size(); i++) {
-        // First byte
-        if (code_buffer[i] != (target_dword & 0xff)) {
-            continue;
-        }
-
-        size_t j = 1;
-
-        while (j < 4) {
-            // Rest of bytes
-            if (code_buffer[i + j] == (target_dword >> ((8 * j) & 0xff))) {
-                j++;
-            } else {
-                // Failed to match all bytes
-                break;
-            }
-        }
-
-        if (j == 4) {
-            for (size_t re_i = 0; re_i < j; re_i++) {
-                uint32_t num = (replace_dword >> (8 * re_i)) & 0xff;
-                auto replace_byte = static_cast<char>(num);
-                code_buffer[i + re_i] = replace_byte;
-            }
-
-            return true;
-        }
-    }
-
-    return false;
-}
 
 namespace PeEpIntercept {
     PeFile::PeFile(std::string path) {
