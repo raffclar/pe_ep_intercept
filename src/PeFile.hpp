@@ -28,8 +28,6 @@ namespace PeEpIntercept {
         explicit PeFile(std::string path);
 
     public:
-        std::vector<char> Assemble(const std::string &assembly);
-
         bool HasSection(const std::string &section_name);
 
         uint32_t GetOriginalEntryPoint();
