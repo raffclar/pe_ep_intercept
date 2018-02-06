@@ -5,12 +5,21 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+    packages:
+      - gcc-6
+      - g++-6
+before_install: sudo apt-get update -qq
 install:
   - |
     CMAKE_URL="https://cmake.org/files/v3.9/cmake-3.9.6-Linux-x86_64.tar.gz"
     mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
     export PATH=${TRAVIS_BUILD_DIR}/cmake/bin:${PATH}
 script:
+  - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
+  - sudo ln -s /usr/bin/g++-6 /usr/local/bin/g++
+  - export CC=/usr/bin/gcc-6
+  - export CXX=/usr/bin/g++-6
+  - gcc -v && g++ -v && cmake --version
   - ./run_build.sh
 
 
