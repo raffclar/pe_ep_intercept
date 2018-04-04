@@ -1,8 +1,8 @@
-#include "PeAssembly.hpp"
+#include "Assembly.hpp"
 
-namespace PeEpIntercept {
-    std::string EntryRedirectAssemblyX64(uint32_t oep) {
-        std::string address = std::to_string(oep);
+namespace Interceptor {
+    std::string entryRedirectAssemblyX64(uint32_t oep) {
+        auto address = std::to_string(oep);
 
         return "push rbp;"
                        "mov rbp, rsp;"
@@ -44,8 +44,8 @@ namespace PeEpIntercept {
                        "ret;";
     }
 
-    std::string EntryRedirectAssemblyX86(uint32_t oep) {
-        std::string address = std::to_string(oep);
+    std::string entryRedirectAssemblyX86(uint32_t oep) {
+        auto address = std::to_string(oep);
         
         return "push ebp;"
                        "mov ebp, esp;"
@@ -86,4 +86,4 @@ namespace PeEpIntercept {
                        // patch in ExitProcess
                        "ret;";
     }
-} // namespace PeEpIntercept
+} // namespace Interceptor
