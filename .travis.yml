@@ -8,6 +8,7 @@ addons:
     packages:
       - gcc-6
       - g++-6
+      - libboost-all-dev
 notifications:
  email:
   on_success: never

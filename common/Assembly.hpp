@@ -3,16 +3,16 @@
 
 #include <string>
 
-namespace PeEpIntercept {
-    enum class PeArch {
+namespace Interceptor {
+    enum class MachineType {
         x86,
         x64,
         unknown
     };
 
-    std::string EntryRedirectAssemblyX64(uint32_t oep);
+    std::string entryRedirectAssemblyX64(uint32_t oep);
 
-    std::string EntryRedirectAssemblyX86(uint32_t oep);
+    std::string entryRedirectAssemblyX86(uint32_t oep);
 }
 
 
