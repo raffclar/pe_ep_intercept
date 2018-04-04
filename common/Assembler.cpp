@@ -1,12 +1,8 @@
 #include <keystone/include/keystone/keystone.h>
-#include "PePatch.hpp"
+#include "Assembler.hpp"
 
-namespace PeEpIntercept {
-    PePatch::PePatch(std::string &path) : PeFile(path) {
-
-    }
-
-    std::vector<char> PePatch::Assemble(const std::string &assembly) {
+namespace Interceptor {
+    std::vector<char> Assembler::assemble(PeArch type, const std::string &assembly) {
         std::vector<char> instructions;
 
         if (assembly.empty()) {

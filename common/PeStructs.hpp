@@ -1,7 +1,7 @@
 #ifndef PE_EP_INTERCEPT_PESTRUCTS_HPP
 #define PE_EP_INTERCEPT_PESTRUCTS_HPP
 
-namespace PeEpIntercept {
+namespace Interceptor {
     const uint32_t scn_code = 0x00000020;
     const uint32_t scn_mem_exe = 0x20000000;
     const uint32_t scn_mem_read = 0x40000000;
