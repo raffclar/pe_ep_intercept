@@ -1,44 +1,6 @@
 #include "PeFile.hpp"
-#include <keystone/keystone.h>
 #include <cinttypes>
-#include <cstring>
 #include <iostream>
-#include <string>
-#include <vector>
-#include <memory>
-
-static bool ReplaceDword(std::vector<char> code_buffer, uint32_t target_dword, uint32_t replace_dword) {
-    for (size_t i = 0; i < code_buffer.size(); i++) {
-        // First byte
-        if (code_buffer[i] != (target_dword & 0xff)) {
-            continue;
-        }
-
-        size_t j = 1;
-
-        while (j < 4) {
-            // Rest of bytes
-            if (code_buffer[i + j] == (target_dword >> ((8 * j) & 0xff))) {
-                j++;
-            } else {
-                // Failed to match all bytes
-                break;
-            }
-        }
-
-        if (j == 4) {
-            for (size_t re_i = 0; re_i < j; re_i++) {
-                uint32_t num = (replace_dword >> (8 * re_i)) & 0xff;
-                auto replace_byte = static_cast<char>(num);
-                code_buffer[i + re_i] = replace_byte;
-            }
-
-            return true;
-        }
-    }
-
-    return false;
-}
 
 namespace PeEpIntercept {
     PeFile::PeFile(std::string path) {
@@ -84,65 +46,6 @@ namespace PeEpIntercept {
         nt_header_signature = 0;
         original_entry_point = 0;
         file_header = {};
-    }
-
-    std::vector<char> PeFile::Assemble(const std::string &assembly) {
-        std::vector<char> instructions;
-
-        if (assembly.empty()) {
-            return instructions;
-        }
-
-        unsigned char *encode = nullptr;
-        ks_engine *ks = nullptr;
-        size_t count;
-        size_t size;
-
-        auto code_deleter = [](unsigned char *code_ptr) {
-            ks_free(code_ptr);
-        };
-
-        auto ks_deleter = [](ks_engine *ks_ptr) {
-            ks_close(ks_ptr);
-        };
-
-        ks_mode instruct_mode;
-
-        switch (type) {
-            case PeArch::x86:
-                instruct_mode = KS_MODE_32;
-                break;
-            case PeArch::x64:
-                instruct_mode = KS_MODE_64;
-                break;
-            default:
-                throw std::runtime_error("executable type not supported");
-        }
-
-        if (ks_open(KS_ARCH_X86, instruct_mode, &ks) != KS_ERR_OK) {
-            throw std::runtime_error("failed to open keystone");
-        }
-
-        std::unique_ptr<ks_engine[],
-                decltype(ks_deleter)> ks_ptr(ks, ks_deleter);
-
-        if (ks_asm(ks, assembly.c_str(), 0, &encode, &size, &count) != KS_ERR_OK) {
-            throw std::runtime_error("failed to assemble instructions");
-        }
-
-        std::unique_ptr<unsigned char[],
-                decltype(code_deleter)> encode_ptr(encode, code_deleter);
-
-        if (size > 0xffffffff) {
-            throw std::runtime_error("exceeded max section size");
-        }
-
-        for (size_t i = 0; i < size; i++) {
-            auto encoded = static_cast<char>(encode[i]);
-            instructions.push_back(encoded);
-        }
-
-        return instructions;
     }
 
     bool PeFile::HasSection(const std::string &section_name) {
