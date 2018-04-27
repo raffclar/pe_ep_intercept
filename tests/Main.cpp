@@ -4,7 +4,6 @@
 #include <array>
 #include <boost/iostreams/stream.hpp>
 #include <boost/process.hpp>
-#include <boost/filesystem.hpp>
 #include <VersionHelpers.h>
 
 namespace io = boost::iostreams;
@@ -20,22 +19,22 @@ bool compile(const std::string &file) {
     bp::basic_pipe<char> p;
 
     fs::path file_path(file);
-	fs::path test_output(fs::current_path() / "test_output");
+    fs::path test_output(fs::current_path() / "test_output");
     fs::path exe_path(test_output / file_path.filename().replace_extension("exe"));
-	fs::path object_path(test_output / file_path.filename().replace_extension("obj"));
+    fs::path object_path(test_output / file_path.filename().replace_extension("obj"));
 
-	// "cmd *file.cpp* /Fe*ExeOutput* /Fo*ObjOutput*"
-	std::string full_cmd = msvc_cmd + " " + file + " /Fe" + exe_path.string() + " /Fo" + object_path.string();
+    // "cmd *file.cpp* /Fe*ExeOutput* /Fo*ObjOutput*"
+    std::string full_cmd = msvc_cmd + " " + file + " /Fe" + exe_path.string() + " /Fo" + object_path.string();
     bp::system(full_cmd, (bp::std_err & bp::std_out) > p);
     return fs::exists(exe_path);
 };
 
 int run(const std::string &file) {
-	bp::basic_pipe<char> p;
+    bp::basic_pipe<char> p;
 
-	fs::path file_path(file);
-	fs::path test_output(fs::current_path() / "test_output" / file_path);
-	return bp::system(test_output.string(), (bp::std_err & bp::std_out) > p);
+    fs::path file_path(file);
+    fs::path test_output(fs::current_path() / "test_output" / file_path);
+    return bp::system(test_output.string(), (bp::std_err & bp::std_out) > p);
 }
 
 TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
@@ -54,21 +53,21 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Working directory is project root") {
-		// Can't set the working directory using settings for Visual Studio with CMake
-		// Bit of hack for getting the right working directory when debugging
-		if (fs::current_path().leaf().string() != "pe_ep_intercept") {
-			fs::path wd(__FILE__);
-			fs::current_path(wd.parent_path().parent_path());
-		}
+        // Can't set the working directory using settings for Visual Studio with CMake
+        // Bit of hack for getting the right working directory when debugging
+        if (fs::current_path().leaf().string() != "pe_ep_intercept") {
+            fs::path wd(__FILE__);
+            fs::current_path(wd.parent_path().parent_path());
+        }
 
         fs::path full_path(fs::current_path());
         REQUIRE(full_path.leaf() == "pe_ep_intercept");
     }
 
-	SECTION("Clear existing executables") {
-		fs::path test_output = fs::current_path() / "test_output";
-		fs::remove(test_output / "*.exe");
-	}
+    SECTION("Clear existing executables") {
+        fs::path test_output = fs::current_path() / "test_output";
+        fs::remove(test_output / "*.exe");
+    }
 
     SECTION("Compile t1") {
         compile("test_programs\\t1.cpp");
@@ -79,7 +78,7 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Run t1") {
-		REQUIRE(run("t1.exe") == 0);
+        REQUIRE(run("t1.exe") == 0);
     }
 
     SECTION("Compile t2") {
@@ -91,7 +90,7 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Run t2") {
-		REQUIRE(run("t2.exe") == 0);
+        REQUIRE(run("t2.exe") == 0);
     }
 
     SECTION("Compile t3") {
@@ -103,7 +102,7 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Run t3") {
-		REQUIRE(run("t3.exe") == 0);
+        REQUIRE(run("t3.exe") == 0);
     }
 }
 
