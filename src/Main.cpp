@@ -91,5 +91,7 @@ int main(int argc, char *argv[]) {
         section = ".code";
     }
 
+    bool success = Interceptor::Editor::edit(in, out, section);
+
     return 0;
 }
