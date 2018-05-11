@@ -8,10 +8,10 @@
 namespace Interceptor {
     class PePatchX64 : public PePatch {
     private:
-        void addSection(const std::string &name) override;
+        void addSection(const std::string &name);
     public:
         explicit PePatchX64(const Assembler &assembler, const PeFile &file) : PePatch(assembler, file) {};
-        PeFile patch();
+        std::vector<char> patch();
     };
 }
 

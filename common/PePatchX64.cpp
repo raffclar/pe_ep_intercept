@@ -1,11 +1,12 @@
 #include <cstring>
 #include "PePatchX64.hpp"
+#include "Assembly.hpp"
 #include "PeStructs.hpp"
 
 namespace Interceptor {
-    PeFile PePatchX64::patch() {
+    std::vector<char> PePatchX64::patch() {
         addSection(".3lc");
-        return file;
+        return file.getFileContents();
     };
 
     void PePatchX64::addSection(const std::string &name) {
@@ -14,30 +15,31 @@ namespace Interceptor {
         auto file_header = file.getFileHeader();
         auto last_section = section_headers.back();
 
-        // Assemble code with original entry point
-        auto oep = file.getEntryPoint();
-        auto code = assembler.assemble(Architecture::x64, entryRedirectAssemblyX64(oep));
+        // Assemble code with oep
+        uint32_t ep = file.getEntryPoint();
+        std::vector<char> code = assembler.assemble(PeArch::x64, entryRedirectAssemblyX64(ep));
         auto code_size = static_cast<uint32_t>(code.size());
-        auto aligned_size = align(code_size, optional_header.FileAlignment);
 
-        RawHeaders::SectionHeader new_section = {};
-        new_section.misc.virtual_size = align(aligned_size, optional_header.section_alignment),
-        new_section.virtual_address = align(
-                last_section.misc.virtual_size + last_section.virtual_address,
-                optional_header.section_alignment
+        auto aligned_size = Align(code_size, optional_header.FileAlignment);
+
+        SectionHeader new_section = {};
+        new_section.Misc.VirtualSize = Align(aligned_size, optional_header.SectionAlignment),
+        new_section.VirtualAddress = Align(
+                last_section.Misc.VirtualSize + last_section.VirtualAddress,
+                optional_header.SectionAlignment
         ),
-        new_section.size_of_raw_data = aligned_size,
-        new_section.pointer_to_raw_data = align(
-                last_section.size_of_raw_data + last_section.pointer_to_raw_data,
+        new_section.SizeOfRawData = aligned_size,
+        new_section.PointerToRawData = Align(
+                last_section.SizeOfRawData + last_section.PointerToRawData,
                 optional_header.FileAlignment
         ),
-        new_section.pointer_to_relocations = 0,
-        new_section.pointer_to_line_numbers = 0,
-        new_section.number_of_relocations = 0,
-        new_section.number_of_line_numbers = 0,
-        new_section.characteristics  = section_rights;
+        new_section.PointerToRelocations = 0,
+        new_section.PointerToLinenumbers = 0,
+        new_section.NumberOfRelocations = 0,
+        new_section.NumberOfLinenumbers = 0,
+        new_section.Characteristics  = section_rights;
 
-        for (size_t i = 0; i < RawHeaders::section_name_size; i++) {
+        for (size_t i = 0; i < section_name_size; i++) {
             char letter;
 
             if (i < name.length()) {
@@ -46,25 +48,24 @@ namespace Interceptor {
                 letter = '\0';
             }
 
-            new_section.name[i] = static_cast<uint8_t>(letter);
+            new_section.Name[i] = static_cast<uint8_t>(letter);
         }
-
-
-        file.addSectionHeader(new_section);
-        file_header.number_of_sections++;
-        file.setFileHeader(file_header);
 
         // Padding is be required otherwise the loader will fail
         // when loading the executable
-        while (code.size() < new_section.size_of_raw_data) {
+        while (code.size() < new_section.SizeOfRawData) {
             code.push_back(0);
         }
 
         file.appendFileData(code);
 
+        file.addSectionHeader(new_section);
+        file_header.NumberOfSections++;
+        file.setFileHeader(file_header);
+
         // The oep is replaced with one pointing to the new code
-        optional_header.AddressOfEntryPoint = new_section.virtual_address;
-        optional_header.SizeOfImage = new_section.virtual_address + new_section.misc.virtual_size;
+        optional_header.AddressOfEntryPoint = new_section.VirtualAddress;
+        optional_header.SizeOfImage = new_section.VirtualAddress + new_section.Misc.VirtualSize;
         file.setOptionalHeaderX64(optional_header);
     }
 }

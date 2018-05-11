@@ -1,10 +1,3 @@
-cmake_minimum_required(VERSION 3.6)
-project(pe_ep_intercept_win_functional_test)
-
-# Keystone
-set(KEYSTONE_BUILD_STATIC_RUNTIME on)
-include_directories(include include/keystone/include)
-
 # Boost
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)

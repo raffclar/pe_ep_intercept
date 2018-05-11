@@ -1,10 +1,10 @@
-#ifndef PE_EP_INTERCEPT_ASSEMBLY_HPP
-#define PE_EP_INTERCEPT_ASSEMBLY_HPP
+#ifndef PE_EP_INTERCEPT_PEASSEMBLY_HPP
+#define PE_EP_INTERCEPT_PEASSEMBLY_HPP
 
 #include <string>
 
 namespace Interceptor {
-    enum class Architecture {
+    enum class PeArch {
         x86,
         x64,
         unknown
@@ -16,4 +16,4 @@ namespace Interceptor {
 }
 
 
-#endif //PE_EP_INTERCEPT_ASSEMBLY_HPP
+#endif //PE_EP_INTERCEPT_PEASSEMBLY_HPP

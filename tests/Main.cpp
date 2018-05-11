@@ -4,7 +4,7 @@
 #include <array>
 #include <boost/iostreams/stream.hpp>
 #include <boost/process.hpp>
-//#include <VersionHelpers.h>
+#include <VersionHelpers.h>
 
 namespace io = boost::iostreams;
 namespace bp = boost::process;
@@ -48,9 +48,9 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
         REQUIRE(bp::system(msvc_cmd, (bp::std_err & bp::std_out) > p) == 0);
     }
 
-//    SECTION("Tests are running on Windows NT6.1+") {
-//        REQUIRE(IsWindows7OrGreater());
-//    }
+    SECTION("Tests are running on Windows NT6.1+") {
+        REQUIRE(IsWindows7OrGreater());
+    }
 
     SECTION("Working directory is project root") {
         // Can't set the working directory using settings for Visual Studio with CMake
@@ -74,8 +74,7 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Edit t1") {
-        std::string path = fs::current_path().string() + "/test_output/t1.exe";
-        REQUIRE(Editor::edit(path, path, ".blob"));
+        REQUIRE(Editor::edit(fs::current_path().string() + "/test_output/t1.exe", ".blob"));
     }
 
     SECTION("Run t1") {
@@ -87,8 +86,7 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Edit t2") {
-        std::string path = fs::current_path().string() + "/test_output/t2.exe";
-        REQUIRE(Editor::edit(path, path, ".blob"));
+        REQUIRE(Editor::edit(fs::current_path().string() + "/test_output/t2.exe", ".blob"));
     }
 
     SECTION("Run t2") {
@@ -100,8 +98,7 @@ TEST_CASE( "Edited executables can be run", "[PeFile]" ) {
     }
 
     SECTION("Edit t3") {
-        std::string path = fs::current_path().string() + "/test_output/t3.exe";
-        REQUIRE(Editor::edit(path, path, ".blob"));
+        REQUIRE(Editor::edit(fs::current_path().string() + "/test_output/t3.exe", ".blob"));
     }
 
     SECTION("Run t3") {
