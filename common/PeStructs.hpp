@@ -19,6 +19,9 @@ namespace Interceptor { namespace RawHeaders {
     const uint32_t ordinal_flag_x86 = 0x80000000;
     const uint64_t ordinal_flag_x64 = 0x8000000000000000;
 
+    const uint16_t dos_signature = 0x5A4D;
+    const uint16_t nt_signature = 0x4550;
+
     typedef struct {
         uint8_t e_magic[2];
         uint16_t e_cblp;
