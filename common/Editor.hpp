@@ -4,7 +4,7 @@
 namespace Interceptor {
     class Editor {
     public:
-        static bool edit(std::string file_path, const std::string &section);
+        static bool edit(const std::string &in_path, const std::string &out_path, const std::string &section);
     };
 }
 
