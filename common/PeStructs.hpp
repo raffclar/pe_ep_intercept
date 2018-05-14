@@ -42,22 +42,22 @@ namespace Interceptor { namespace RawHeaders {
         uint16_t e_oeminfo;
         uint16_t e_res2[10];
         int32_t e_lfanew;
-    } DosHeader, *DosHeaderPtr;
+    } DosHeader;
 
     typedef struct {
         uint16_t machine;
-        uint16_t NumberOfSections;
-        uint32_t TimeDateStamp;
-        uint32_t PointerToSymbolTable;
-        uint32_t NumberOfSymbols;
-        uint16_t SizeOfOptionalHeader;
-        uint16_t Characteristics;
-    } CoffHeader, *CoffHeaderPtr;
+        uint16_t number_of_sections;
+        uint32_t time_datestamp;
+        uint32_t pointer_to_symbol_table;
+        uint32_t number_of_symbols;
+        uint16_t size_of_optional_header;
+        uint16_t characteristics;
+    } CoffHeader;
 
     typedef struct {
         uint32_t VirtualAddress;
         uint32_t Size;
-    } DataDirectory, *DataDirectoryPtr;
+    } DataDirectory;
 
     typedef struct {
         uint16_t Magic;
@@ -92,7 +92,7 @@ namespace Interceptor { namespace RawHeaders {
         uint32_t LoaderFlags;
         uint32_t NumberOfRvaAndSizes;
         DataDirectory dataDirectory[directory_count];
-    } OptionalHeaderX86, *OptionalHeaderX86Ptr;
+    } OptionalHeaderX86;
 
     typedef struct {
         uint16_t Magic;
@@ -105,7 +105,7 @@ namespace Interceptor { namespace RawHeaders {
         // Extensions
         uint32_t BaseOfCode;
         uint64_t ImageBase;
-        uint32_t SectionAlignment;
+        uint32_t section_alignment;
         uint32_t FileAlignment;
         uint16_t MajorOperatingSystemVersion;
         uint16_t MinorOperatingSystemVersion;
@@ -126,41 +126,41 @@ namespace Interceptor { namespace RawHeaders {
         uint32_t LoaderFlags;
         uint32_t NumberOfRvaAndSizes;
         DataDirectory dataDirectory[directory_count];
-    } OptionalHeaderX64, *OptionalHeaderX64Ptr;
+    } OptionalHeaderX64;
 
     typedef struct {
         uint32_t signature;
         CoffHeader coff;
         OptionalHeaderX86 optional;
-    } NtHeaderX86, *NtHeaderX86Ptr;
+    } NtHeaderX86;
 
     typedef struct {
         uint32_t signature;
         CoffHeader coff;
         OptionalHeaderX64 optional;
-    } NtHeaderX64, *NtHeaderX64Ptr;
+    } NtHeaderX64;
 
     typedef struct {
-        uint8_t Name[section_name_size];
+        uint8_t name[section_name_size];
         union {
-            uint32_t PhysicalAddress;
-            uint32_t VirtualSize;
-        } Misc;
-        uint32_t VirtualAddress;
-        uint32_t SizeOfRawData;
-        uint32_t PointerToRawData;
-        uint32_t PointerToRelocations;
-        uint32_t PointerToLinenumbers;
-        uint16_t NumberOfRelocations;
-        uint16_t NumberOfLinenumbers;
-        uint32_t Characteristics;
-    } SectionHeader, *SectionHeaderPtr;
+            uint32_t physical_address;
+            uint32_t virtual_size;
+        } misc;
+        uint32_t virtual_address;
+        uint32_t size_of_raw_data;
+        uint32_t pointer_to_raw_data;
+        uint32_t pointer_to_relocations;
+        uint32_t pointer_to_line_numbers;
+        uint16_t number_of_relocations;
+        uint16_t number_of_line_numbers;
+        uint32_t characteristics;
+    } SectionHeader;
 
     typedef struct {
         uint32_t StartingAddress;
         uint32_t EndingAddress;
         uint32_t EndOfPrologue;
-    } FunctionEntry, *FunctionEntryPtr;
+    } FunctionEntry;
 
     typedef struct {
         union {
@@ -171,7 +171,7 @@ namespace Interceptor { namespace RawHeaders {
         uint32_t ForwarderChain;
         uint32_t Name;
         uint32_t FirstThunk;
-    } ImportDescriptor, *ImportDescriptorPtr;
+    } ImportDescriptor;
 
     typedef struct {
         union {
@@ -180,7 +180,7 @@ namespace Interceptor { namespace RawHeaders {
             uint32_t Ordinal;
             uint32_t AddressOfData;
         } u1;
-    } ThunkDataX86, *ThunkDataX86Ptr;
+    } ThunkDataX86;
 
     typedef struct {
         uint16_t Hint;
