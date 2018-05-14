@@ -2,7 +2,7 @@
 
 namespace Interceptor {
     std::string entryRedirectAssemblyX64(uint32_t oep) {
-        std::string address = std::to_string(oep);
+        auto address = std::to_string(oep);
 
         return "push rbp;"
                        "mov rbp, rsp;"
@@ -45,7 +45,7 @@ namespace Interceptor {
     }
 
     std::string entryRedirectAssemblyX86(uint32_t oep) {
-        std::string address = std::to_string(oep);
+        auto address = std::to_string(oep);
         
         return "push ebp;"
                        "mov ebp, esp;"
