@@ -25,7 +25,7 @@ void PrintUsage() {
 }
 
 int main(int argc, char *argv[]) {
-    std::cout << "pe_ep_intercept" << std::endl;
+    std::cout << "Running..." << std::endl;
 
     if (argc < 3) {
         PrintUsage();
