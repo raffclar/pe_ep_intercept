@@ -93,5 +93,9 @@ int main(int argc, char *argv[]) {
 
     bool success = Interceptor::Editor::edit(in, out, section);
 
+    if (success) {
+        return 1;
+    }
+
     return 0;
 }
