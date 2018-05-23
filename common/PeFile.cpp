@@ -1,5 +1,4 @@
 #include "PeFile.hpp"
-#include "PeStructs.hpp"
 #include <cinttypes>
 #include <iostream>
 
@@ -105,10 +104,6 @@ namespace Interceptor {
         return type;
     }
 
-    RawHeaders::DosHeader PeFile::getDosHeader() {
-        return dos_header;
-    }
-
     RawHeaders::CoffHeader PeFile::getFileHeader() {
         return coff_header;
     }
@@ -131,10 +126,6 @@ namespace Interceptor {
 
     void PeFile::addSectionHeader(RawHeaders::SectionHeader header) {
         section_headers.push_back(header);
-    }
-
-    void PeFile::setDosHeader(RawHeaders::DosHeader dos_header) {
-        this->dos_header = dos_header;
     }
 
     void PeFile::setFileHeader(RawHeaders::CoffHeader file_header) {
