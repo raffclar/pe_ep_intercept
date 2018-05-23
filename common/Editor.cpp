@@ -38,7 +38,7 @@ namespace Interceptor {
                 return false;
         }
 
-        auto patched_file = patcher->patch();
+        auto patched_file = patcher->patch(section);
         std::fstream output(out_path, std::ios::out | std::ios::trunc | std::ios::binary);
         patched_file.write(output);
 

@@ -11,7 +11,7 @@ namespace Interceptor {
         void addSection(const std::string &name) override;
     public:
         explicit PePatchX64(const Assembler &assembler, const PeFile &file) : PePatch(assembler, file) {};
-        PeFile patch();
+        PeFile patch(const std::string &section) override;
     };
 }
 

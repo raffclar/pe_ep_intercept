@@ -17,6 +17,7 @@ namespace Interceptor {
         PeFile file;
         uint32_t align(uint32_t num, uint32_t multiple);
         virtual void addSection(const std::string &name) = 0;
+        virtual PeFile patch(const std::string &section) = 0;
     public:
         PePatch(const Assembler &assembler, PeFile file) : assembler(assembler), file(std::move(file)) {};
     };

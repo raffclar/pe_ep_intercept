@@ -3,8 +3,8 @@
 #include "PeStructs.hpp"
 
 namespace Interceptor {
-    PeFile PePatchX64::patch() {
-        addSection(".3lc");
+    PeFile PePatchX64::patch(const std::string &section) {
+        addSection(section);
         return file;
     };
 
@@ -48,7 +48,6 @@ namespace Interceptor {
 
             new_section.name[i] = static_cast<uint8_t>(letter);
         }
-
 
         file.addSectionHeader(new_section);
         file_header.number_of_sections++;
