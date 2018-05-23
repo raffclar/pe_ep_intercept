@@ -91,11 +91,25 @@ int main(int argc, char *argv[]) {
         section = ".code";
     }
 
-    bool success = Interceptor::Editor::edit(in, out, section);
+    std::fstream file;
+    file.exceptions(std::fstream::failbit | std::ios::badbit);
+    file.open(
+            in,
+            std::ios::binary |
+            std::ios::ate |
+            std::ios::in |
+            std::ios::out
+    );
 
-    if (success) {
+    std::tuple<Interceptor::PeFile, bool> pair = Interceptor::Editor::edit(file, section);
+
+    if (std::get<bool>(pair)) {
         return 1;
     }
+
+    std::fstream output(out, std::ios::out | std::ios::trunc | std::ios::binary);
+    Interceptor::PeFile patched_file = std::get<Interceptor::PeFile>(pair);
+    patched_file.write(output);
 
     return 0;
 }
