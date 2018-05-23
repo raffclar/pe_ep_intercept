@@ -9,13 +9,13 @@ namespace Interceptor {
         file_stream.seekg(0, std::ios::beg);
 
         if (size <= 0) {
-            throw std::runtime_error("Could not get file size");
+            throw std::runtime_error("Could not get file size.");
         }
 
         std::vector<char> file_contents(static_cast<unsigned long>(size));
 
         if (!file_stream.read(file_contents.data(), size)) {
-            throw std::runtime_error("Could not read file");
+            throw std::runtime_error("Could not read file.");
         }
 
         const auto *raw_buffer = file_contents.data();
@@ -40,7 +40,7 @@ namespace Interceptor {
                 type = Architecture::x64;
                 break;
             default:
-                throw std::runtime_error("COFF header machine type is unknown");
+                throw std::runtime_error("COFF header machine type is unknown.");
         }
 
         nt_header_signature = 0;
@@ -66,7 +66,7 @@ namespace Interceptor {
         }
 
         if (nt_header_signature != RawHeaders::nt_signature) {
-            throw std::runtime_error("NT header signature is corrupt");
+            throw std::runtime_error("NT header signature is corrupt.");
         }
 
         for (int i = 0; i < coff_header.number_of_sections; i++) {
