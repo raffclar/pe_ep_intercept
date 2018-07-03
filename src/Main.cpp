@@ -21,7 +21,7 @@ CSimpleOpt::SOption g_rgOptions[] = {
 void PrintUsage() {
     std::cout << "Usage: pe_ep_intercept.exe "
             "[-p PATH] [-s SECTION_NAME] [-o PATH]"
-            "[--section SECTION_NAME] [-h] [--help]" << std::endl;
+            " [--section SECTION_NAME] [-h] [--help]" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
