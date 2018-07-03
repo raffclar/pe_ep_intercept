@@ -144,6 +144,7 @@ namespace Interceptor {
         file_data.insert(file_data.end(), new_data.begin(), new_data.end());
     }
 
+    // TODO: Rewrite using templates
     void PeFile::write(std::fstream &file) {
         RawHeaders::DosHeader dos = this->dos_header;
         RawHeaders::CoffHeader coff_header = this->coff_header;
