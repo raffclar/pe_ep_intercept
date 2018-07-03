@@ -25,12 +25,12 @@ void PrintUsage() {
 }
 
 int main(int argc, char *argv[]) {
-    std::cout << "Running..." << std::endl;
-
     if (argc < 3) {
         PrintUsage();
         return 0;
     }
+
+    std::cout << "Running..." << std::endl;
 
     CSimpleOpt args(argc, argv, g_rgOptions, SO_O_EXACT);
 
