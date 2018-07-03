@@ -38,6 +38,6 @@ namespace Interceptor {
         }
 
         auto patched_file = patcher->patch(section);
-        return std::make_tuple(exe_file, true);
+        return std::make_tuple(patched_file, true);
     }
 }
