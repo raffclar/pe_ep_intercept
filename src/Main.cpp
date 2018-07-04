@@ -104,7 +104,8 @@ int main(int argc, char *argv[]) {
     std::tuple<Interceptor::PeFile, bool> pair = Interceptor::Editor::edit(file, section);
     file.close();
 
-    if (std::get<bool>(pair)) {
+    if (!std::get<bool>(pair)) {
+        std::cout << "Failed to edit the target executable." << std::endl;
         return 1;
     }
 
