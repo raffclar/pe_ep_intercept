@@ -233,7 +233,7 @@ namespace Interceptor {
         std::cout << "Writing section data." << std::endl;
         file.write(section_data.data(), section_data.size());
 
-        std::cout << "Writing rest of data." << std::endl;
+        std::cout << "Writing remaining image data." << std::endl;
         file.write(file_data.data(), file_data.size());
     }
 } // namespace Interceptor
