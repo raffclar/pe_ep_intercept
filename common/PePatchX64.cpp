@@ -1,6 +1,5 @@
 #include <cstring>
 #include "PePatchX64.hpp"
-#include "PeStructs.hpp"
 
 namespace Interceptor {
     PeFile PePatchX64::patch(const std::string &section) {
