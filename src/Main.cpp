@@ -102,6 +102,7 @@ int main(int argc, char *argv[]) {
     );
 
     std::tuple<Interceptor::PeFile, bool> pair = Interceptor::Editor::edit(file, section);
+    file.close();
 
     if (std::get<bool>(pair)) {
         return 1;
