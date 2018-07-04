@@ -60,7 +60,7 @@ namespace Interceptor {
 
         file.appendFileData(code);
 
-        // The oep is replaced with one pointing to the new code
+        // The OEP is replaced with one pointing to the new code
         optional_header.AddressOfEntryPoint = new_section.virtual_address;
         optional_header.SizeOfImage = new_section.virtual_address + new_section.misc.virtual_size;
         file.setOptionalHeaderX64(optional_header);
