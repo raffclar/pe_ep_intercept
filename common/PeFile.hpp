@@ -34,8 +34,6 @@ namespace Interceptor {
 
         Architecture getPeArch();
 
-        RawHeaders::DosHeader getDosHeader();
-
         RawHeaders::CoffHeader getFileHeader();
 
         RawHeaders::OptionalHeaderX64 getOptionalHeaderX64();
@@ -45,8 +43,6 @@ namespace Interceptor {
         std::vector<RawHeaders::SectionHeader> getSectionHeaders();
 
         void addSectionHeader(RawHeaders::SectionHeader header);
-
-        void setDosHeader(RawHeaders::DosHeader dos_header);
 
         void setFileHeader(RawHeaders::CoffHeader file_header);
 
