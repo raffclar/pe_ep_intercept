@@ -1,20 +1,17 @@
 ﻿#include <iostream>
 #include <vector>
-#include "PeFile.hpp"
-
-// https://github.com/brofield/simpleopt
-// MIT license
 #include "utils/SimpleOpt.h"
-#include "PePatchX64.hpp"
-#include "PePatchX86.hpp"
+#include "../common/PeFile.hpp"
+#include "../common/Editor.hpp"
 
 enum {
-    OPT_HELP, OPT_PATH, OPT_SECT
+    OPT_HELP, OPT_IN, OPT_OUT, OPT_SECT
 };
 
 CSimpleOpt::SOption g_rgOptions[] = {
-        {OPT_PATH, "-p", SO_REQ_SEP},
+        {OPT_IN, "-p", SO_REQ_SEP},
         {OPT_SECT, "-s", SO_REQ_SEP},
+        {OPT_OUT, "-o", SO_REQ_SEP},
         {OPT_SECT, "--section", SO_REQ_SEP},
         {OPT_HELP, "-h", SO_NONE},
         {OPT_HELP, "--help", SO_NONE},
@@ -23,22 +20,23 @@ CSimpleOpt::SOption g_rgOptions[] = {
 
 void PrintUsage() {
     std::cout << "Usage: pe_ep_intercept.exe "
-            "[-p PATH] [-s SECTION_NAME] "
-            "[--section SECTION_NAME] [-h] [--help]" << std::endl;
+            "[-p PATH] [-s SECTION_NAME] [-o PATH]"
+            " [--section SECTION_NAME] [-h] [--help]" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
-    std::cout << "pe_ep_intercept" << std::endl;
-
-    if (argc < 2) {
+    if (argc < 3) {
         PrintUsage();
         return 0;
     }
 
+    std::cout << "Running..." << std::endl;
+
     CSimpleOpt args(argc, argv, g_rgOptions, SO_O_EXACT);
 
     std::string section;
-    std::string path;
+    std::string in;
+    std::string out;
     _ESOError eso_state = SO_SUCCESS;
 
     while (args.Next() && eso_state == SO_SUCCESS) {
@@ -49,11 +47,14 @@ int main(int argc, char *argv[]) {
                 case OPT_HELP:
                     PrintUsage();
                     return 0;
-                case OPT_PATH:
-                    path = args.OptionArg();
+                case OPT_IN:
+                    in = args.OptionArg();
                     break;
                 case OPT_SECT:
                     section = args.OptionArg();
+                    break;
+                case OPT_OUT:
+                    out = args.OptionArg();
                     break;
                 default:
                     break;
@@ -74,8 +75,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    if (path.empty()) {
-        std::cout << "Error: path cannot be empty." << std::endl;
+    if (in.empty()) {
+        std::cout << "Error: input must be specified." << std::endl;
+        PrintUsage();
+        return 1;
+    }
+
+    if (out.empty()) {
+        std::cout << "Error: output must be specified." << std::endl;
         PrintUsage();
         return 1;
     }
@@ -84,43 +91,27 @@ int main(int argc, char *argv[]) {
         section = ".code";
     }
 
-    try {
-        PeEpIntercept::PeArch arch = PeEpIntercept::PeFile::GetPeArch(path);
-        std::unique_ptr<PeEpIntercept::PePatch> patcher;
+    std::fstream file;
+    file.exceptions(std::fstream::failbit | std::ios::badbit);
+    file.open(
+            in,
+            std::ios::binary |
+            std::ios::ate |
+            std::ios::in |
+            std::ios::out
+    );
 
-        std::string instruct;
-        uint32_t oep = 0;
+    std::tuple<Interceptor::PeFile, bool> pair = Interceptor::Editor::edit(file, section);
+    file.close();
 
-        switch (arch) {
-            case PeEpIntercept::PeArch::x64:
-                patcher = std::make_unique<PeEpIntercept::PePatchX64>(path);
-                oep = patcher->GetOriginalEntryPoint();
-                instruct = PeEpIntercept::EntryRedirectAssemblyX64(oep);
-                break;
-            case PeEpIntercept::PeArch::x86:
-                patcher = std::make_unique<PeEpIntercept::PePatchX86>(path);
-                oep = patcher->GetOriginalEntryPoint();
-                instruct = PeEpIntercept::EntryRedirectAssemblyX86(oep);
-                break;
-            case PeEpIntercept::PeArch::unknown:
-                std::cout << "Unsupported architecture." << std::endl;
-                return 1;
-        }
-
-        auto machine_code = patcher->Assemble(instruct);
-        auto code_size = static_cast<uint32_t>(machine_code.size());
-
-        if (patcher->HasSection(section)) {
-            std::cout << "Has section \"" << section << "\"." << std::endl;
-        } else {
-            patcher->AddSection(section, code_size);
-        }
-
-        patcher->SaveFile("a2.exe", machine_code);
-    } catch (std::runtime_error &err) {
-        std::cout << err.what() << std::endl;
+    if (!std::get<bool>(pair)) {
+        std::cout << "Failed to edit the target executable." << std::endl;
         return 1;
     }
+
+    std::fstream output(out, std::ios::out | std::ios::trunc | std::ios::binary);
+    Interceptor::PeFile patched_file = std::get<Interceptor::PeFile>(pair);
+    patched_file.write(output);
 
     return 0;
 }
