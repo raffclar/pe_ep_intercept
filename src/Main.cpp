@@ -91,15 +91,18 @@ int main(int argc, char *argv[]) {
         section = ".code";
     }
 
-    std::fstream file;
-    file.exceptions(std::fstream::failbit | std::ios::badbit);
-    file.open(
+    std::fstream file(
             in,
             std::ios::binary |
             std::ios::ate |
             std::ios::in |
             std::ios::out
     );
+
+    if (file.fail()) {
+        std::cout << "Could not open input file. Code: \"" << file.failbit << "\"." << std::endl;
+        return 1;
+    }
 
     std::tuple<Interceptor::PeFile, bool> pair = Interceptor::Editor::edit(file, section);
     file.close();
@@ -110,6 +113,12 @@ int main(int argc, char *argv[]) {
     }
 
     std::fstream output(out, std::ios::out | std::ios::trunc | std::ios::binary);
+
+    if (output.fail()) {
+        std::cout << "Could not open output file. Code: \"" << file.failbit << "\"." << std::endl;
+        return 1;
+    }
+
     Interceptor::PeFile patched_file = std::get<Interceptor::PeFile>(pair);
     patched_file.write(output);
 
