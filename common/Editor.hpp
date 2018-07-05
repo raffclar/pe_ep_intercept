@@ -14,8 +14,9 @@ namespace Interceptor {
          * @param section The new section will have this string as its name
          * @return Contains a success. Returns original file on failure, patched on success
          */
-        static std::tuple<PeFile, bool> edit(std::fstream &file,
-                           const std::string &section
+        static std::tuple<PeFile, bool> edit(
+                std::fstream &file,
+                const std::string &section
         );
     };
 }
