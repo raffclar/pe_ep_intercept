@@ -1,12 +1,8 @@
 #include <keystone/include/keystone/keystone.h>
-#include "PePatch.hpp"
+#include "Assembler.hpp"
 
-namespace PeEpIntercept {
-    PePatch::PePatch(std::string &path) : PeFile(path) {
-
-    }
-
-    std::vector<char> PePatch::Assemble(const std::string &assembly) {
+namespace Interceptor {
+    std::vector<char> Assembler::assemble(MachineType type, const std::string &assembly) {
         std::vector<char> instructions;
 
         if (assembly.empty()) {
@@ -29,10 +25,10 @@ namespace PeEpIntercept {
         ks_mode instruct_mode;
 
         switch (type) {
-            case PeArch::x86:
+            case MachineType::x86:
                 instruct_mode = KS_MODE_32;
                 break;
-            case PeArch::x64:
+            case MachineType::x64:
                 instruct_mode = KS_MODE_64;
                 break;
             default:
